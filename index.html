@@ -175,11 +175,10 @@ body{ color:var(--ink); word-break:keep-all; overscroll-behavior-y:none; }
 .eq-bars span:nth-child(4){height:85%; animation-delay:0.45s;}
 @keyframes eq-bounce{ 0%,100%{transform:scaleY(0.35);} 50%{transform:scaleY(1);} }
 
-body.sheet-open{ overflow:hidden; }
 body.sheet-open #bottom-nav{ visibility:hidden; pointer-events:none; }
-#sheet-overlay{ position:fixed; inset:0; background:rgba(59,46,48,0.35); display:none; align-items:flex-end; justify-content:center; z-index:700;}
+#sheet-overlay{ position:fixed; inset:0; background:rgba(59,46,48,0.35); display:none; align-items:flex-end; justify-content:center; z-index:700; overscroll-behavior:contain;}
 #sheet-overlay.open{ display:flex; }
-#sheet{ background:var(--bg); width:100%; max-width:430px; border-radius:22px 22px 0 0; padding:18px 20px calc(22px + env(safe-area-inset-bottom)); max-height:82vh; overflow-y:auto; animation: sheet-up .2s ease;}
+#sheet{ background:var(--bg); width:100%; max-width:430px; border-radius:22px 22px 0 0; padding:18px 20px calc(22px + env(safe-area-inset-bottom)); max-height:82vh; overflow-y:auto; touch-action:pan-y; overscroll-behavior:contain; animation: sheet-up .2s ease;}
 @keyframes sheet-up{ from{transform:translateY(30px);opacity:0;} to{transform:translateY(0);opacity:1;} }
 .sheet-handle{ width:38px;height:4px; background:var(--line); border-radius:4px; margin:0 auto 14px; }
 .sheet-title{ font-size:16px; font-weight:700; margin-bottom:14px; }
@@ -1248,10 +1247,26 @@ function openSheet(html){
   document.getElementById('sheet-overlay').classList.add('open');
 }
 function closeSheet(){
-  document.getElementById('sheet-overlay').classList.remove('open');
+  const overlay = document.getElementById('sheet-overlay');
+  overlay.classList.remove('open');
   document.body.classList.remove('sheet-open');
+  // 혹시 이전 버전의 인라인 스크롤 잠금이 남아 있어도 즉시 복구
+  document.documentElement.style.overflowY = '';
+  document.body.style.overflowY = '';
+}
+function resetSheetState(){
+  const overlay = document.getElementById('sheet-overlay');
+  if(overlay && !overlay.classList.contains('open')){
+    document.body.classList.remove('sheet-open');
+    document.documentElement.style.overflowY = '';
+    document.body.style.overflowY = '';
+  }
 }
 document.getElementById('sheet-overlay').addEventListener('click',(e)=>{ if(e.target.id==='sheet-overlay') closeSheet(); });
+document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') closeSheet(); });
+window.addEventListener('pageshow', resetSheetState);
+window.addEventListener('focus', resetSheetState);
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) resetSheetState(); });
 
 function openConfirmSheet(msg, onOk){
   openSheet(`
@@ -1560,6 +1575,7 @@ function showToast(msg){
 
 /* ================= 초기화 ================= */
 (async function init(){
+  resetSheetState();
   await loadState();
   render();
 })();
