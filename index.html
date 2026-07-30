@@ -175,7 +175,9 @@ body{ color:var(--ink); word-break:keep-all; overscroll-behavior-y:none; }
 .eq-bars span:nth-child(4){height:85%; animation-delay:0.45s;}
 @keyframes eq-bounce{ 0%,100%{transform:scaleY(0.35);} 50%{transform:scaleY(1);} }
 
-#sheet-overlay{ position:fixed; inset:0; background:rgba(59,46,48,0.35); display:none; align-items:flex-end; justify-content:center; z-index:200;}
+body.sheet-open{ overflow:hidden; }
+body.sheet-open #bottom-nav{ visibility:hidden; pointer-events:none; }
+#sheet-overlay{ position:fixed; inset:0; background:rgba(59,46,48,0.35); display:none; align-items:flex-end; justify-content:center; z-index:700;}
 #sheet-overlay.open{ display:flex; }
 #sheet{ background:var(--bg); width:100%; max-width:430px; border-radius:22px 22px 0 0; padding:18px 20px calc(22px + env(safe-area-inset-bottom)); max-height:82vh; overflow-y:auto; animation: sheet-up .2s ease;}
 @keyframes sheet-up{ from{transform:translateY(30px);opacity:0;} to{transform:translateY(0);opacity:1;} }
@@ -1240,8 +1242,15 @@ function saveSong(){
 }
 
 /* ================= 바텀시트 ================= */
-function openSheet(html){ document.getElementById('sheet').innerHTML=html; document.getElementById('sheet-overlay').classList.add('open'); }
-function closeSheet(){ document.getElementById('sheet-overlay').classList.remove('open'); }
+function openSheet(html){
+  document.getElementById('sheet').innerHTML=html;
+  document.body.classList.add('sheet-open');
+  document.getElementById('sheet-overlay').classList.add('open');
+}
+function closeSheet(){
+  document.getElementById('sheet-overlay').classList.remove('open');
+  document.body.classList.remove('sheet-open');
+}
 document.getElementById('sheet-overlay').addEventListener('click',(e)=>{ if(e.target.id==='sheet-overlay') closeSheet(); });
 
 function openConfirmSheet(msg, onOk){
