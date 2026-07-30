@@ -1029,9 +1029,11 @@ function renderProfileView(){
 /* ================= 이벤트 위임 ================= */
 document.addEventListener('click', (e)=>{
   const t = e.target;
+  const navTarget = t.closest ? t.closest('[data-nav-tab]') : null;
 
-  if(t.matches('[data-nav-tab]')){
-    activeTab = t.getAttribute('data-nav-tab'); drillDate=null; drillFrom=null;
+  /* 아이콘·텍스트·빈 여백 어디를 눌러도 해당 탭 버튼 전체를 인식 */
+  if(navTarget){
+    activeTab = navTarget.getAttribute('data-nav-tab'); drillDate=null; drillFrom=null;
     resetInlineStates(); render(); return;
   }
   if(t.matches('[data-drill-back]')){ drillDate=null; resetInlineStates(); render(); return; }
