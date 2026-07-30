@@ -62,6 +62,7 @@ body{ color:var(--ink); word-break:keep-all; overscroll-behavior-y:none; }
 .plus-badge{ color:var(--primary); font-weight:800; font-size:14px; }
 .plus-badge-btn{ background:none; border:none; color:var(--primary); font-size:21px; font-weight:800; cursor:pointer; padding:0 8px; flex-shrink:0; line-height:1;}
 .ghost-add{ display:inline-flex; align-items:center; gap:6px; background:var(--bg-deep); border:none; border-radius:20px; padding:6px 12px 6px 6px; font-size:12px; color:var(--ink-soft); cursor:pointer;}
+.new-category-action{ margin-bottom:26px; }
 
 .schedule-row{ display:flex; align-items:center; gap:9px; background:var(--sched-tint); border-left:3px solid var(--sched-accent); border-radius:0 12px 12px 0; padding:10px 12px; margin-bottom:6px;}
 .time-pill{ font-size:11px; font-weight:700; color:var(--sched-accent); background:#fff; border-radius:7px; padding:3px 6px; flex-shrink:0;}
@@ -110,8 +111,8 @@ body{ color:var(--ink); word-break:keep-all; overscroll-behavior-y:none; }
 .lvl-nav .lvl-title{ font-size:17px; font-weight:700; }
 .lvl-arrow{ background:var(--card); border:1px solid var(--line); border-radius:50%; width:30px;height:30px; font-size:14px; color:var(--ink-soft); cursor:pointer;}
 
-.month-card-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
-.month-card{ background:var(--card); border-radius:14px; padding:10px 10px 8px; box-shadow:var(--shadow-soft); min-height:110px; display:flex; flex-direction:column;}
+.month-card-grid{ display:grid; grid-template-columns:1fr; gap:10px; }
+.month-card{ background:var(--card); border-radius:14px; padding:12px 14px; box-shadow:var(--shadow-soft); min-height:0; display:flex; flex-direction:column;}
 .month-card-head{ font-size:13px; font-weight:700; color:var(--primary-deep); cursor:pointer; margin-bottom:4px; background:none; border:none; padding:0; text-align:left;}
 
 .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-bottom:18px;}
@@ -124,14 +125,14 @@ body{ color:var(--ink); word-break:keep-all; overscroll-behavior-y:none; }
 .cal-dot{ width:4.5px;height:4.5px;border-radius:50%; }
 .cal-sched-label{ font-size:8px; color:var(--ink-soft); max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 
-.week-strip{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px;}
-.week-day-card{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:9px 9px 8px; text-align:left; cursor:pointer; display:flex; flex-direction:column; gap:3px;}
+.week-strip{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-bottom:14px; align-items:stretch;}
+.week-day-card{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:9px 9px 8px; text-align:left; cursor:pointer; display:flex; flex-direction:column; gap:3px; min-width:0; overflow:hidden;}
 .week-day-card.today{ background:var(--primary-tint); border-color:var(--primary); }
 .wd-top{ display:flex; align-items:baseline; gap:5px; }
 .wd-label{font-size:10.5px;color:var(--ink-soft);}
 .wd-num{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:14px;}
 .wd-mood{font-size:12px; margin-left:auto;}
-.wd-sched-line{font-size:10px; color:var(--ink); line-height:1.35; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;}
+.wd-sched-line{font-size:10px; color:var(--ink); line-height:1.35; width:100%; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;}
 .wd-sched-more{font-size:9px; color:var(--ink-faint);}
 .wd-dots{display:flex; gap:2px; margin-top:2px;}
 
@@ -141,13 +142,21 @@ body{ color:var(--ink); word-break:keep-all; overscroll-behavior-y:none; }
 .empty-hub{ text-align:center; padding:30px 10px; color:var(--ink-faint); font-size:13px; }
 .empty-hub .big{ font-size:24px; margin-bottom:8px; }
 
-#bottom-nav{ position:sticky; bottom:0; display:flex; background:var(--card); border-top:1px solid var(--line); padding:8px 0 calc(8px + env(safe-area-inset-bottom)); z-index:30;}
+#bottom-nav{ position:fixed; left:50%; bottom:0; transform:translateX(-50%); width:100%; max-width:430px; display:flex; background:var(--card); border-top:1px solid var(--line); padding:8px 0 calc(8px + env(safe-area-inset-bottom)); z-index:300;}
 .nav-item{ flex:1; text-align:center; background:none; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:2px; color:var(--ink-faint); font-size:10px;}
 .nav-item .nav-icon{ font-size:18px; }
 .nav-item.active{ color:var(--primary-deep); font-weight:700; }
 
 .profile-hero{ text-align:center; padding:20px 0 10px; }
 .profile-avatar-big{ width:76px;height:76px;border-radius:50%; background:var(--primary-tint); display:flex;align-items:center;justify-content:center; font-size:36px; margin:0 auto 12px;}
+.account-card{ display:flex; align-items:center; gap:12px; background:var(--card); border:1px solid var(--line); border-radius:15px; padding:13px 14px; margin:0 0 24px; box-shadow:var(--shadow-soft); }
+.account-icon{ width:38px; height:38px; border-radius:50%; background:var(--bg-deep); display:flex; align-items:center; justify-content:center; font-family:Arial,sans-serif; font-size:18px; font-weight:700; color:var(--primary-deep); flex-shrink:0; }
+.account-copy{ flex:1; min-width:0; }
+.account-title{ font-size:13px; font-weight:700; }
+.account-sub{ margin-top:2px; font-size:10.5px; line-height:1.35; color:var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.google-connect-btn{ flex-shrink:0; border:1px solid var(--line); border-radius:11px; background:var(--bg); color:var(--ink); padding:8px 10px; font-family:inherit; font-size:11.5px; font-weight:700; cursor:pointer; }
+.google-connect-btn:hover{ border-color:var(--primary); color:var(--primary-deep); }
+.google-connect-btn:disabled{ opacity:.55; cursor:wait; }
 .avatar-pick-row{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:18px;}
 .avatar-opt{ width:34px;height:34px;border-radius:50%; background:var(--card); border:1.5px solid var(--line); font-size:16px; cursor:pointer; display:flex;align-items:center;justify-content:center;}
 .avatar-opt.selected{ border-color:var(--primary); background:var(--primary-tint); }
@@ -207,8 +216,8 @@ textarea{ min-height:65px; resize:vertical; }
   .summary-grid{ gap:18px; }
   .cal-grid{ gap:8px; }
   .cal-cell{ border-radius:14px; }
-  .month-card-grid{ grid-template-columns:repeat(4,1fr); }
-  #bottom-nav{ padding:12px 0; }
+  .month-card-grid{ grid-template-columns:1fr; }
+  #bottom-nav{ width:calc(100% - 44px); max-width:860px; padding:12px 0; border-radius:0 0 26px 26px; }
   .nav-item{ font-size:11.5px; }
   .nav-item .nav-icon{ font-size:20px; }
 }
@@ -228,9 +237,27 @@ textarea{ min-height:65px; resize:vertical; }
 <div id="sheet-overlay"><div id="sheet"></div></div>
 <div id="toast"></div>
 
+<!-- Firebase: 단일 HTML 배포를 위한 CDN compat SDK -->
+<script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-database-compat.js"></script>
+
 <script>
 /* ================= 상태 & 저장 ================= */
 const STORAGE_KEY = 'diary-state-v3';
+const LOCAL_BACKUP_KEY = `${STORAGE_KEY}-firebase-backup`;
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBjzZON7YqYGJxqZZ-2W-7f64B1VoDj3uY",
+  authDomain: "todaydiary-427d5.firebaseapp.com",
+  databaseURL: "https://todaydiary-427d5-default-rtdb.firebaseio.com",
+  projectId: "todaydiary-427d5",
+  storageBucket: "todaydiary-427d5.firebasestorage.app",
+  messagingSenderId: "492551492057",
+  appId: "1:492551492057:web:d1341d3e7ecf1fc0a589c8",
+  measurementId: "G-ZF558KE0S8"
+};
+
 const DOW_KR = ['일','월','화','수','목','금','토'];
 const MONTH_NAMES = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const SWATCHES = ['#E7ABB2','#DDC9A3','#A9BFA0','#9FB6C4','#B39AB0','#DCC08A'];
@@ -269,38 +296,282 @@ let renamingCatId = null;
 let scheduleAddOpen = false;
 let scheduleRepeatDaysSelected = new Set();
 
-let saveTimer=null;
-function scheduleSave(){ clearTimeout(saveTimer); saveTimer=setTimeout(saveState,400); }
-async function saveState(){
-  try{ await window.storage.set(STORAGE_KEY, JSON.stringify(state), false); }
-  catch(e){ console.error(e); showToast('저장에 실패했어 ㅠㅠ'); }
+let firebaseApp = null;
+let firebaseAuth = null;
+let firebaseDb = null;
+let currentUser = null;
+let userStateRef = null;
+let firebaseReady = false;
+let saveTimer = null;
+let cloudErrorToastShown = false;
+let googleAuthBusy = false;
+
+function normalizeState(parsed){
+  const merged = Object.assign(defaultState(), parsed || {});
+  merged.profile = Object.assign(defaultState().profile, parsed?.profile || {});
+  merged.settings = Object.assign(defaultState().settings, parsed?.settings || {});
+
+  /* 예전 단일 문자열 목표 데이터를 체크리스트 형태로 마이그레이션 */
+  if(parsed?.yearGoals){
+    Object.keys(parsed.yearGoals).forEach(k=>{
+      const txt = (parsed.yearGoals[k] || '').trim();
+      if(txt && (!merged.yearGoalItems[k] || !merged.yearGoalItems[k].length)){
+        merged.yearGoalItems[k] = [{id:uid(), text:txt, done:false}];
+      }
+    });
+  }
+  if(parsed?.monthGoals){
+    Object.keys(parsed.monthGoals).forEach(k=>{
+      const txt = (parsed.monthGoals[k] || '').trim();
+      if(txt && (!merged.monthGoalItems[k] || !merged.monthGoalItems[k].length)){
+        merged.monthGoalItems[k] = [{id:uid(), text:txt, done:false}];
+      }
+    });
+  }
+  return merged;
 }
-async function loadState(){
+
+function readLocalBackup(){
   try{
+    const raw = localStorage.getItem(LOCAL_BACKUP_KEY) || localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){
+    console.warn('로컬 백업 읽기 실패:', e);
+    return null;
+  }
+}
+
+async function readLegacyClaudeStorage(){
+  try{
+    if(!window.storage || typeof window.storage.get !== 'function') return null;
     const res = await window.storage.get(STORAGE_KEY, false);
-    if(res && res.value){
-      const parsed = JSON.parse(res.value);
-      state = Object.assign(defaultState(), parsed);
-      if(parsed.yearGoals){
-        Object.keys(parsed.yearGoals).forEach(k=>{
-          const txt = (parsed.yearGoals[k]||'').trim();
-          if(txt && (!state.yearGoalItems[k] || !state.yearGoalItems[k].length)){
-            state.yearGoalItems[k] = [{id:uid(), text:txt, done:false}];
-          }
-        });
+    return res?.value ? JSON.parse(res.value) : null;
+  }catch(e){
+    console.warn('기존 Claude 저장소 읽기 실패:', e);
+    return null;
+  }
+}
+
+function writeLocalBackup(){
+  try{
+    localStorage.setItem(LOCAL_BACKUP_KEY, JSON.stringify(state));
+  }catch(e){
+    console.warn('로컬 백업 저장 실패:', e);
+  }
+}
+
+function initFirebase(){
+  if(!window.firebase){
+    throw new Error('Firebase SDK를 불러오지 못했어. 인터넷 연결이나 CDN 차단을 확인해줘.');
+  }
+  firebaseApp = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
+  firebaseAuth = firebase.auth();
+  firebaseDb = firebase.database();
+}
+
+function waitForAnonymousUser(){
+  return new Promise((resolve, reject)=>{
+    let finished = false;
+    let unsubscribe = null;
+
+    const finish = (fn, value)=>{
+      if(finished) return;
+      finished = true;
+      if(unsubscribe) unsubscribe();
+      fn(value);
+    };
+
+    unsubscribe = firebaseAuth.onAuthStateChanged(async user=>{
+      if(user){
+        finish(resolve, user);
+        return;
       }
-      if(parsed.monthGoals){
-        Object.keys(parsed.monthGoals).forEach(k=>{
-          const txt = (parsed.monthGoals[k]||'').trim();
-          if(txt && (!state.monthGoalItems[k] || !state.monthGoalItems[k].length)){
-            state.monthGoalItems[k] = [{id:uid(), text:txt, done:false}];
-          }
-        });
+      try{
+        const credential = await firebaseAuth.signInAnonymously();
+        finish(resolve, credential.user);
+      }catch(error){
+        finish(reject, error);
       }
+    }, error=>finish(reject, error));
+  });
+}
+
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveState, 400);
+}
+
+async function saveState(){
+  /* 클라우드 오류가 생겨도 현재 브라우저에는 항상 백업 */
+  writeLocalBackup();
+
+  if(!firebaseReady || !userStateRef) return;
+
+  try{
+    await userStateRef.set(state);
+    cloudErrorToastShown = false;
+  }catch(e){
+    console.error('Firebase 저장 실패:', e);
+    if(!cloudErrorToastShown){
+      showToast('클라우드 저장 실패 · 이 기기에는 백업했어');
+      cloudErrorToastShown = true;
     }
-  }catch(e){ state = defaultState(); }
+  }
+}
+
+async function loadState(){
+  let fallback = readLocalBackup();
+  if(!fallback) fallback = await readLegacyClaudeStorage();
+
+  try{
+    initFirebase();
+    currentUser = await waitForAnonymousUser();
+    userStateRef = firebaseDb.ref(`users/${currentUser.uid}/diaryState`);
+
+    const snapshot = await userStateRef.once('value');
+    if(snapshot.exists()){
+      state = normalizeState(snapshot.val());
+    }else if(fallback){
+      /* 첫 Firebase 연결이면 기존 브라우저 데이터를 자동 업로드 */
+      state = normalizeState(fallback);
+      await userStateRef.set(state);
+    }else{
+      state = defaultState();
+      await userStateRef.set(state);
+    }
+
+    firebaseReady = true;
+    writeLocalBackup();
+  }catch(e){
+    console.error('Firebase 초기화/불러오기 실패:', e);
+    state = normalizeState(fallback || defaultState());
+    firebaseReady = false;
+
+    const code = e?.code || '';
+    if(code === 'auth/operation-not-allowed'){
+      showToast('Firebase에서 익명 로그인을 먼저 켜줘');
+    }else if(code === 'PERMISSION_DENIED' || code === 'permission_denied'){
+      showToast('Database 규칙 권한을 확인해줘');
+    }else{
+      showToast('클라우드 연결 실패 · 이 기기에서 임시 저장해');
+    }
+  }
+
   applyTheme(state.settings.theme || 'pink');
 }
+
+function isGoogleConnected(user = currentUser){
+  return !!user && !user.isAnonymous && (user.providerData || []).some(p=>p?.providerId === 'google.com');
+}
+
+function hasMeaningfulDiaryData(candidate){
+  const s = normalizeState(candidate || {});
+  const goalCount = obj => Object.values(obj || {}).reduce((sum, arr)=>sum + (Array.isArray(arr) ? arr.length : 0), 0);
+  return !!(
+    s.tasks.length || s.routines.length || s.recurringSchedules.length ||
+    Object.keys(s.routineCompletions || {}).length ||
+    goalCount(s.yearGoalItems) || goalCount(s.monthGoalItems) ||
+    Object.keys(s.moods || {}).length || s.playlist.length ||
+    (s.profile?.name || '').trim() || (s.profile?.status || '').trim() ||
+    (s.profile?.avatar && s.profile.avatar !== '🙂') ||
+    (s.categories.length > 1)
+  );
+}
+
+function googleAuthErrorMessage(error){
+  const code = error?.code || '';
+  if(code === 'auth/popup-closed-by-user') return '로그인 창을 닫았어';
+  if(code === 'auth/cancelled-popup-request') return '이미 로그인 창이 열려 있어';
+  if(code === 'auth/popup-blocked') return '팝업이 차단됐어 · 브라우저에서 허용해줘';
+  if(code === 'auth/unauthorized-domain') return 'Firebase 승인된 도메인에 현재 주소를 추가해줘';
+  if(code === 'auth/operation-not-allowed') return 'Firebase에서 Google 로그인을 켜줘';
+  if(code === 'auth/network-request-failed') return '네트워크 연결을 확인해줘';
+  return 'Google 로그인에 실패했어';
+}
+
+async function switchToExistingGoogleAccount(provider, previousState){
+  const result = await firebaseAuth.signInWithPopup(provider);
+  currentUser = result.user;
+  const targetRef = firebaseDb.ref(`users/${currentUser.uid}/diaryState`);
+  const targetSnapshot = await targetRef.once('value');
+
+  if(targetSnapshot.exists()){
+    const cloudState = normalizeState(targetSnapshot.val());
+    if(hasMeaningfulDiaryData(previousState)){
+      const useCloud = window.confirm(
+        '이 Google 계정에 이미 저장된 다이어리가 있어.\n\n확인: 계정에 저장된 데이터 불러오기\n취소: 지금 화면의 데이터를 Google 계정에 덮어쓰기'
+      );
+      if(useCloud){
+        state = cloudState;
+      }else{
+        state = normalizeState(previousState);
+        await targetRef.set(state);
+      }
+    }else{
+      state = cloudState;
+    }
+  }else{
+    state = normalizeState(previousState);
+    await targetRef.set(state);
+  }
+
+  userStateRef = targetRef;
+  firebaseReady = true;
+  writeLocalBackup();
+}
+
+async function connectGoogleAccount(){
+  if(googleAuthBusy) return;
+  if(!firebaseAuth || !firebaseDb || !currentUser){
+    showToast('Firebase 연결을 먼저 확인해줘');
+    return;
+  }
+  if(isGoogleConnected()){
+    showToast('이미 Google 계정에 연결돼 있어');
+    return;
+  }
+
+  googleAuthBusy = true;
+  render();
+
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt:'select_account' });
+  const previousState = normalizeState(JSON.parse(JSON.stringify(state)));
+
+  try{
+    await saveState();
+    const result = await currentUser.linkWithPopup(provider);
+    currentUser = result.user;
+    userStateRef = firebaseDb.ref(`users/${currentUser.uid}/diaryState`);
+    firebaseReady = true;
+    await userStateRef.set(state);
+    writeLocalBackup();
+    showToast('Google 계정 연결 완료 ✨');
+  }catch(error){
+    const reusableAccountCodes = new Set([
+      'auth/credential-already-in-use',
+      'auth/email-already-in-use'
+    ]);
+
+    if(reusableAccountCodes.has(error?.code)){
+      try{
+        await switchToExistingGoogleAccount(provider, previousState);
+        showToast('Google 계정 데이터와 연결했어 ✨');
+      }catch(signInError){
+        console.error('기존 Google 계정 로그인 실패:', signInError);
+        showToast(googleAuthErrorMessage(signInError));
+      }
+    }else{
+      console.error('Google 계정 연결 실패:', error);
+      showToast(googleAuthErrorMessage(error));
+    }
+  }finally{
+    googleAuthBusy = false;
+    applyTheme(state.settings.theme || 'pink');
+    render();
+  }
+}
+
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 function applyTheme(t){ document.documentElement.setAttribute('data-theme', t); }
 
@@ -484,7 +755,7 @@ function renderDayView(date, isHome){
       </div>
     `;
   }
-  catSectionsHtml += `<button class="ghost-add" data-open-category-sheet><span class="plus-badge">+</span>새 카테고리</button>`;
+  catSectionsHtml += `<button class="ghost-add new-category-action" data-open-category-sheet><span class="plus-badge">+</span>새 카테고리</button>`;
 
   let routineHtml = '';
   if(routines.length){
@@ -707,6 +978,23 @@ function renderWeekView(){
 /* ---- 프로필 뷰 ---- */
 function renderProfileView(){
   const p = state.profile;
+  const googleConnected = isGoogleConnected();
+  const accountName = googleConnected ? (currentUser.displayName || 'Google 계정') : '익명 계정으로 저장 중';
+  const accountSub = googleConnected
+    ? (currentUser.email || '다른 기기에서도 같은 계정으로 동기화돼')
+    : 'Google 계정에 연결하면 PC와 휴대폰에서 같은 데이터를 쓸 수 있어';
+  const accountHtml = `
+    <div class="account-card">
+      <div class="account-icon">G</div>
+      <div class="account-copy">
+        <div class="account-title">${escapeHtml(accountName)}</div>
+        <div class="account-sub">${escapeHtml(accountSub)}</div>
+      </div>
+      ${googleConnected
+        ? '<span class="faint" style="flex-shrink:0;">연결됨</span>'
+        : `<button class="google-connect-btn" data-google-connect ${googleAuthBusy?'disabled':''}>${googleAuthBusy?'연결 중…':'Google 연결'}</button>`}
+    </div>
+  `;
   const songs = state.playlist.map(s=>`
     <div class="playlist-row">
       <div class="playlist-text">${escapeHtml(s.line)}</div>
@@ -723,7 +1011,8 @@ function renderProfileView(){
     </div>
     <div class="field-row"><div class="field-label">이름</div><input type="text" id="profile-name" value="${escapeHtml(p.name)}" placeholder="이름을 입력해줘"></div>
     <div class="field-row"><div class="field-label">상태 메시지</div><input type="text" id="profile-status" value="${escapeHtml(p.status)}" placeholder="한 줄 소개나 오늘 기분"></div>
-    <button class="btn btn-primary" id="profile-save" style="width:100%;margin-bottom:24px;">저장</button>
+    <button class="btn btn-primary" id="profile-save" style="width:100%;margin-bottom:18px;">저장</button>
+    ${accountHtml}
     <div class="field-label" style="text-align:center;margin-bottom:10px;">테마 색상</div>
     <div class="theme-row">
       ${THEMES.map(t=>`<button class="theme-opt ${state.settings.theme===t.id?'selected':''}" style="background:${t.color}" data-pick-theme="${t.id}"></button>`).join('')}
@@ -841,6 +1130,7 @@ document.addEventListener('click', (e)=>{
     const [scope,key] = t.getAttribute('data-goal-add').split('|');
     addGoalFromInput(scope,key); return;
   }
+  if(t.matches('[data-google-connect]')){ connectGoogleAccount(); return; }
   if(t.matches('[data-save-song]')){ saveSong(); return; }
   if(t.matches('[data-del-song]')){
     const id = t.getAttribute('data-del-song');
