@@ -32,12 +32,12 @@
   --shadow-soft: 0 2px 10px rgba(120,170,140,0.1);
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-html,body{margin:0;padding:0;background:var(--bg-deep);max-width:100%;overflow-x:hidden;}
-body{ color:var(--ink); word-break:keep-all; overscroll-behavior-y:none; }
+html{ margin:0; padding:0; width:100%; min-height:100%; background:var(--bg-deep); overflow-x:hidden; }
+body{ margin:0; padding:0; width:100%; min-height:100vh; min-height:100dvh; color:var(--ink); word-break:keep-all; overflow-x:hidden; overscroll-behavior-y:auto; -webkit-overflow-scrolling:touch; }
 .mono{ font-family:'JetBrains Mono',monospace; }
 
-#shell{ width:100%; max-width:430px; margin:0 auto; min-height:100vh; background:var(--bg); position:relative; display:flex; flex-direction:column; overflow-x:hidden; }
-#view-container{ width:100%; min-width:0; flex:1; padding:16px 15px 90px; touch-action:pan-y; overflow-x:hidden; }
+#shell{ width:100%; max-width:430px; margin:0 auto; min-height:100vh; min-height:100dvh; background:var(--bg); position:relative; display:flex; flex-direction:column; overflow-x:hidden; }
+#view-container{ width:100%; min-width:0; flex:1 0 auto; padding:16px 15px 110px; overflow-x:hidden; }
 
 .profile-bar{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
 .avatar-circle{ width:36px;height:36px;border-radius:50%; background:var(--primary-tint); display:flex;align-items:center;justify-content:center;font-size:18px; flex-shrink:0;}
@@ -176,8 +176,9 @@ body{ color:var(--ink); word-break:keep-all; overscroll-behavior-y:none; }
 @keyframes eq-bounce{ 0%,100%{transform:scaleY(0.35);} 50%{transform:scaleY(1);} }
 
 body.sheet-open #bottom-nav{ visibility:hidden; pointer-events:none; }
-#sheet-overlay{ position:fixed; inset:0; background:rgba(59,46,48,0.35); display:none; align-items:flex-end; justify-content:center; z-index:700; overscroll-behavior:contain;}
-#sheet-overlay.open{ display:flex; }
+#sheet-overlay{ position:fixed; inset:0; background:rgba(59,46,48,0.35); display:none; align-items:flex-end; justify-content:center; z-index:700; overscroll-behavior:contain; pointer-events:none;}
+#sheet-overlay.open{ display:flex; pointer-events:auto; }
+#sheet-overlay:not(.open){ display:none !important; visibility:hidden; }
 #sheet{ background:var(--bg); width:100%; max-width:430px; border-radius:22px 22px 0 0; padding:18px 20px calc(22px + env(safe-area-inset-bottom)); max-height:82vh; overflow-y:auto; touch-action:pan-y; overscroll-behavior:contain; animation: sheet-up .2s ease;}
 @keyframes sheet-up{ from{transform:translateY(30px);opacity:0;} to{transform:translateY(0);opacity:1;} }
 .sheet-handle{ width:38px;height:4px; background:var(--line); border-radius:4px; margin:0 auto 14px; }
@@ -212,7 +213,7 @@ textarea{ min-height:65px; resize:vertical; }
 
 @media (min-width:700px){
   body{ background:var(--bg-deep); }
-  #shell{ max-width:860px; margin:22px auto; min-height:calc(100vh - 44px); border-radius:26px; box-shadow:0 16px 50px rgba(0,0,0,0.08); overflow:hidden; }
+  #shell{ max-width:860px; margin:22px auto; min-height:calc(100vh - 44px); border-radius:26px; box-shadow:0 16px 50px rgba(0,0,0,0.08); overflow-x:hidden; }
   #view-container{ padding:30px 46px 100px; }
   .summary-grid{ gap:18px; }
   .cal-grid{ gap:8px; }
@@ -1244,22 +1245,31 @@ function saveSong(){
 function openSheet(html){
   document.getElementById('sheet').innerHTML=html;
   document.body.classList.add('sheet-open');
-  document.getElementById('sheet-overlay').classList.add('open');
+  const overlay = document.getElementById('sheet-overlay');
+  overlay.classList.add('open');
+  overlay.setAttribute('aria-hidden','false');
+}
+function clearLegacyScrollLocks(){
+  const props = ['overflow','overflow-x','overflow-y','position','height','max-height','touch-action'];
+  props.forEach(prop=>{
+    document.documentElement.style.removeProperty(prop);
+    document.body.style.removeProperty(prop);
+  });
 }
 function closeSheet(){
   const overlay = document.getElementById('sheet-overlay');
   overlay.classList.remove('open');
+  overlay.setAttribute('aria-hidden','true');
   document.body.classList.remove('sheet-open');
-  // 혹시 이전 버전의 인라인 스크롤 잠금이 남아 있어도 즉시 복구
-  document.documentElement.style.overflowY = '';
-  document.body.style.overflowY = '';
+  clearLegacyScrollLocks();
 }
 function resetSheetState(){
   const overlay = document.getElementById('sheet-overlay');
-  if(overlay && !overlay.classList.contains('open')){
+  if(!overlay) return;
+  if(!overlay.classList.contains('open')){
+    overlay.setAttribute('aria-hidden','true');
     document.body.classList.remove('sheet-open');
-    document.documentElement.style.overflowY = '';
-    document.body.style.overflowY = '';
+    clearLegacyScrollLocks();
   }
 }
 document.getElementById('sheet-overlay').addEventListener('click',(e)=>{ if(e.target.id==='sheet-overlay') closeSheet(); });
