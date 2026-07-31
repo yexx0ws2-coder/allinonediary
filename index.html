@@ -171,6 +171,11 @@ body{ margin:0; padding:0; width:100%; min-height:100vh; min-height:100dvh; colo
 .cal-dots{ display:flex; gap:2px; flex-wrap:wrap; justify-content:center; }
 .cal-dot{ width:4.5px;height:4.5px;border-radius:50%; }
 .cal-sched-label{ font-size:8px; color:var(--ink-soft); max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.cal-desktop-schedules{ display:none; width:100%; min-width:0; }
+.cal-desktop-row{ width:100%; min-width:0; display:flex; align-items:baseline; gap:5px; }
+.cal-desktop-time{ flex:0 0 auto; font-family:'JetBrains Mono',monospace; font-weight:700; white-space:nowrap; }
+.cal-desktop-title{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cal-desktop-more{ color:var(--ink-faint); }
 
 .week-strip{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-bottom:14px; align-items:stretch;}
 .week-day-card{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:9px 9px 8px; text-align:left; cursor:pointer; display:flex; flex-direction:column; gap:3px; min-width:0; overflow:hidden;}
@@ -269,6 +274,23 @@ textarea{ min-height:65px; resize:vertical; }
   #bottom-nav{ width:calc(100% - 44px); max-width:860px; padding:12px 0; border-radius:0 0 26px 26px; }
   .nav-item{ font-size:11.5px; }
   .nav-item .nav-icon{ font-size:20px; }
+
+  /* PC 캘린더는 넓고 또렷하게: 모바일 캘린더 스타일에는 영향 없음 */
+  body[data-view="calendar"] #shell{ max-width:1120px; }
+  body[data-view="calendar"] #bottom-nav{ max-width:1120px; }
+  body[data-view="calendar"] #view-container{ padding-left:38px; padding-right:38px; }
+  body[data-view="calendar"] .cal-grid{ gap:9px; overflow:visible; }
+  body[data-view="calendar"] .cal-dow{ font-size:12.5px; padding-bottom:6px; }
+  body[data-view="calendar"] .cal-cell{ position:relative; aspect-ratio:auto; min-height:134px; align-items:stretch; gap:5px; padding:9px 8px 8px; border-radius:14px; }
+  body[data-view="calendar"] .cal-daynum{ align-self:flex-start; font-size:14px; line-height:1.2; }
+  body[data-view="calendar"] .cal-dots{ position:absolute; top:10px; right:8px; justify-content:flex-end; max-width:48%; }
+  body[data-view="calendar"] .cal-dot{ width:5px; height:5px; }
+  body[data-view="calendar"] .cal-sched-label{ display:none; }
+  body[data-view="calendar"] .cal-desktop-schedules{ display:flex; flex-direction:column; gap:5px; margin-top:3px; }
+  body[data-view="calendar"] .cal-desktop-row{ font-size:12px; line-height:1.3; color:var(--ink); }
+  body[data-view="calendar"] .cal-desktop-time{ width:36px; color:var(--sched-accent); font-size:10.5px; }
+  body[data-view="calendar"] .cal-desktop-title{ text-align:left; }
+  body[data-view="calendar"] .cal-desktop-more{ padding-left:41px; font-size:10.5px; line-height:1.1; text-align:left; }
 }
 </style>
 </head>
@@ -767,6 +789,7 @@ function calendarDotColors(dateStr){
 
 /* ================= 렌더 ================= */
 function render(){
+  document.body.dataset.view = drillDate ? 'day' : activeTab;
   document.querySelectorAll('.nav-item').forEach(el=>{
     const tab = el.getAttribute('data-nav-tab');
     el.classList.toggle('active', drillDate ? tab===drillFrom : tab===activeTab);
@@ -1024,12 +1047,16 @@ function renderCalendarView(){
     const otherMonth = dayNum<1 || dayNum>daysInMonth;
     const dStr = fmtDate(cellDate);
     const colors = calendarDotColors(dStr);
-    const sched = scheduleForDate(cellDate)[0];
+    const daySchedules = scheduleForDate(cellDate);
+    const sched = daySchedules[0];
     let dots=''; colors.slice(0,3).forEach(c=> dots += `<span class="cal-dot" style="background:${c}"></span>`);
     const extra = colors.length>3 ? `<span style="font-size:7.5px;color:var(--ink-faint);">+${colors.length-3}</span>` : '';
+    const desktopSchedules = daySchedules.slice(0,3).map(s=>`<div class="cal-desktop-row" title="${escapeHtml(`${s.time} ${s.title}`)}"><span class="cal-desktop-time">${escapeHtml(s.time)}</span><span class="cal-desktop-title">${escapeHtml(s.title)}</span></div>`).join('');
+    const desktopMore = daySchedules.length>3 ? `<div class="cal-desktop-more">+${daySchedules.length-3}</div>` : '';
     cells += `<div class="cal-cell ${dStr===todayS?'today':''} ${dStr===selectedStr?'selected':''} ${otherMonth?'other-month':''}" data-select-calendar-date="${dStr}">
       <span class="cal-daynum">${cellDate.getDate()}</span><span class="cal-dots">${dots}${extra}</span>
       ${sched?`<span class="cal-sched-label">${escapeHtml(sched.title)}</span>`:''}
+      <div class="cal-desktop-schedules">${desktopSchedules}${desktopMore}</div>
     </div>`;
   }
 
