@@ -31,6 +31,14 @@
   --primary:#93C0A4; --primary-deep:#5F9C74; --primary-tint:#EAF6EE;
   --shadow-soft: 0 2px 10px rgba(120,170,140,0.1);
 }
+:root[data-theme="soymilk"]{
+  --bg:#F7F3EC; --bg-deep:#EEE7DC; --card:#FFFDF8;
+  --ink:#4B433D; --ink-soft:#8C7E73; --ink-faint:#CFC2B5;
+  --line:#E7DED2;
+  --primary:#A88F7A; --primary-deep:#7C6554; --primary-tint:#EEE4D8;
+  --shadow-soft:0 2px 10px rgba(104,84,69,0.10);
+  --sched-accent:#A58A73; --sched-tint:#F4EEE5;
+}
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html{ margin:0; padding:0; width:100%; min-height:100%; background:var(--bg-deep); overflow-x:hidden; }
 body{ margin:0; padding:0; width:100%; min-height:100vh; min-height:100dvh; color:var(--ink); word-break:keep-all; overflow-x:hidden; overscroll-behavior-y:auto; -webkit-overflow-scrolling:touch; }
@@ -79,6 +87,12 @@ body{ margin:0; padding:0; width:100%; min-height:100vh; min-height:100dvh; colo
 .chk{ width:19px;height:19px;border-radius:50%; border:2px solid var(--ink-faint); background:transparent; flex-shrink:0; cursor:pointer; display:flex;align-items:center;justify-content:center; font-size:10.5px; color:transparent;}
 .task-title{ flex:1; font-size:14px; min-width:0; overflow-wrap:anywhere; cursor:pointer;}
 .task-title.done{ text-decoration:line-through; color:var(--ink-faint); }
+.sortable-task-list{ min-height:2px; }
+.sortable-task-row{ position:relative; transition:transform .12s ease, opacity .12s ease, box-shadow .12s ease; }
+.sortable-task-row.dragging{ opacity:.72; transform:scale(1.015); box-shadow:0 10px 24px rgba(0,0,0,.12); z-index:20; }
+.drag-handle{ width:28px; height:28px; margin:-4px -2px -4px 0; display:flex; align-items:center; justify-content:center; flex-shrink:0; border:none; background:none; color:var(--ink-faint); font-size:17px; line-height:1; cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; }
+.drag-handle:active{ cursor:grabbing; color:var(--primary-deep); }
+.sort-hint{ margin:-2px 0 9px; font-size:10.5px; color:var(--ink-faint); }
 .row-actions{ display:flex; gap:1px; flex-shrink:0; }
 .row-actions button{ background:none;border:none;font-size:12.5px;color:var(--ink-faint);cursor:pointer;padding:4px;}
 .row-actions button:hover{ color:var(--primary-deep); }
@@ -265,7 +279,7 @@ const MONTH_NAMES = ['1월','2월','3월','4월','5월','6월','7월','8월','9�
 const SWATCHES = ['#E7ABB2','#DDC9A3','#A9BFA0','#9FB6C4','#B39AB0','#DCC08A'];
 const MOOD_EMOJIS = ['😊','🥰','😌','😐','😔','😢','😤','😡','😴','🥳','😎','🤔','😭','✨','💪','🤒'];
 const AVATAR_EMOJIS = ['🙂','😺','🐶','🐰','🦊','🐻','🐼','🌸','⭐','🍀','🐨','🐹'];
-const THEMES = [ {id:'pink', color:'#DD8F98'}, {id:'blue', color:'#8FB3DD'}, {id:'green', color:'#93C0A4'} ];
+const THEMES = [ {id:'pink', color:'#DD8F98', label:'핑크'}, {id:'blue', color:'#8FB3DD', label:'블루'}, {id:'green', color:'#93C0A4', label:'그린'}, {id:'soymilk', color:'#A88F7A', label:'소이밀크'} ];
 const PERIODS = [['morning','🌅 아침'],['afternoon','☀️ 낮'],['evening','🌙 밤']];
 
 function defaultState(){
@@ -312,6 +326,15 @@ function normalizeState(parsed){
   const merged = Object.assign(defaultState(), parsed || {});
   merged.profile = Object.assign(defaultState().profile, parsed?.profile || {});
   merged.settings = Object.assign(defaultState().settings, parsed?.settings || {});
+  merged.tasks = Array.isArray(merged.tasks) ? merged.tasks : [];
+  /* 기존 데이터에도 안정적인 수동 정렬값을 부여 */
+  merged.tasks.forEach((task, index)=>{
+    if(!Number.isFinite(Number(task.sortOrder))){
+      task.sortOrder = Number(task.createdAt) || (index + 1) * 1000;
+    }else{
+      task.sortOrder = Number(task.sortOrder);
+    }
+  });
 
   /* 예전 단일 문자열 목표 데이터를 체크리스트 형태로 마이그레이션 */
   if(parsed?.yearGoals){
@@ -593,6 +616,22 @@ function catById(id){ return state.categories.find(c=>c.id===id); }
 function tasksForDate(dateStr){ return state.tasks.filter(t=>t.scope==='day' && t.date===dateStr); }
 function tasksForWeek(weekKey){ return state.tasks.filter(t=>t.scope==='week' && t.weekKey===weekKey); }
 function tasksForMonth(monthKey){ return state.tasks.filter(t=>t.scope==='month' && t.monthKey===monthKey); }
+function taskSortValue(t){
+  const order = Number(t.sortOrder);
+  if(Number.isFinite(order)) return order;
+  const created = Number(t.createdAt);
+  return Number.isFinite(created) ? created : 0;
+}
+function sortTasksForDisplay(tasks){
+  return [...tasks].sort((a,b)=>{
+    if(!!a.done !== !!b.done) return a.done ? 1 : -1;
+    return taskSortValue(a) - taskSortValue(b) || String(a.id).localeCompare(String(b.id));
+  });
+}
+function nextTaskSortOrder(){
+  const max = state.tasks.reduce((m,t)=>Math.max(m, taskSortValue(t)), 0);
+  return max + 1000;
+}
 function routinesForDate(d){ const dow=d.getDay(); return state.routines.filter(r=>r.days.includes(dow)); }
 function isRoutineDone(rid,dateStr){ return !!state.routineCompletions[rid+'|'+dateStr]; }
 function dayDotColors(dateStr){
@@ -661,7 +700,7 @@ function renderDayView(date, isHome){
   const dStr = fmtDate(date);
   const dayTasks = tasksForDate(dStr);
   const schedule = scheduleForDate(date);
-  const regular = dayTasks.filter(t=>!t.time);
+  const regular = sortTasksForDisplay(dayTasks.filter(t=>!t.time));
   const routines = routinesForDate(date);
   const mood = state.moods[dStr];
 
@@ -712,6 +751,7 @@ function renderDayView(date, isHome){
   let scheduleAddRow = '';
   if(scheduleAddOpen){
     scheduleAddRow = `
+      <div data-inline-editor="schedule">
       <div class="inline-add-row">
         <input type="time" id="sched-time-input" value="09:00">
         <input type="text" id="sched-title-input" placeholder="일정 한 줄로" data-enter-add="schedule">
@@ -722,6 +762,7 @@ function renderDayView(date, isHome){
       </label>
       <div class="dow-row" id="sched-repeat-days" style="display:none;">
         ${DOW_KR.map((d,i)=>`<button type="button" class="dow-btn" data-repeat-dow="${i}">${d}</button>`).join('')}
+      </div>
       </div>
     `;
   } else {
@@ -738,9 +779,9 @@ function renderDayView(date, isHome){
     catSectionsHtml += `
       <div class="section">
         <div class="cat-head">${headLabel}<button class="icon-btn-plain" data-cat-rename="${cat.id}">✎</button></div>
-        <div>${items.map(t=>taskRowHtml(t, cat.color)).join('')}</div>
+        <div class="sortable-task-list" data-sort-context="day|${dStr}|${cat.id}">${sortTasksForDisplay(items).map(t=>taskRowHtml(t, cat.color)).join('')}</div>
         ${openCatAddId===cat.id ? `
-          <div class="inline-add-row">
+          <div data-inline-editor="task" class="inline-add-row">
             <input type="text" id="cat-add-input-${cat.id}" placeholder="한 줄로 적기" data-enter-add="cat|${cat.id}">
             <button class="inline-reg-btn" data-save-cat-task="${cat.id}">추가</button>
           </div>
@@ -753,7 +794,7 @@ function renderDayView(date, isHome){
     catSectionsHtml += `
       <div class="section">
         <div class="cat-head"><span class="section-title" style="margin:0;">미분류</span></div>
-        <div>${groupNone.map(t=>taskRowHtml(t, '#CBBBBC')).join('')}</div>
+        <div class="sortable-task-list" data-sort-context="day|${dStr}|none">${sortTasksForDisplay(groupNone).map(t=>taskRowHtml(t, '#CBBBBC')).join('')}</div>
       </div>
     `;
   }
@@ -793,9 +834,9 @@ function renderDayView(date, isHome){
   let summaryHtml = '';
   if(isHome){
     const wKey = weekKeyOf(date);
-    const weekRemain = tasksForWeek(wKey).filter(t=>!t.done);
+    const weekRemain = sortTasksForDisplay(tasksForWeek(wKey).filter(t=>!t.done));
     const mKey = monthKeyOf(date);
-    const monthRemain = tasksForMonth(mKey).filter(t=>!t.done);
+    const monthRemain = sortTasksForDisplay(tasksForMonth(mKey).filter(t=>!t.done));
     summaryHtml = `
       <div class="section">
         <div class="summary-grid">
@@ -821,6 +862,7 @@ function renderDayView(date, isHome){
       ${scheduleItems}
       ${scheduleAddRow}
     </div>
+    ${regular.length ? '<div class="sort-hint">⠿를 눌러 끌면 할 일 우선순위를 바꿀 수 있어 · 완료한 일은 아래로 정리돼</div>' : ''}
     ${catSectionsHtml}
     ${emptyAll}
     ${routineHtml}
@@ -829,15 +871,17 @@ function renderDayView(date, isHome){
 }
 
 function taskRowHtml(t, color){
-  return `<div class="task-row" style="border-left-color:${color}">
+  return `<div class="task-row sortable-task-row" data-task-id="${t.id}" data-task-done="${t.done?'1':'0'}" style="border-left-color:${color}">
     <button class="chk ${t.done?'done':''}" style="border-color:${color}; ${t.done?`background:${color};color:#fff;`:''}" data-toggle-task="${t.id}">${t.done?'✓':''}</button>
     <span class="task-title ${t.done?'done':''}" data-open-detail="${t.id}">${escapeHtml(t.title)}</span>
+    <button type="button" class="drag-handle" aria-label="순서 바꾸기" title="끌어서 순서 바꾸기">⠿</button>
     <div class="row-actions"><button data-open-move="${t.id}">→</button><button data-delete-task="${t.id}">✕</button></div>
   </div>`;
 }
 function poolRowHtml(t){
-  return `<div class="task-row" style="border-left-color:var(--ink-faint);">
-    <span class="task-title" data-open-pool-detail="${t.id}">${escapeHtml(t.title)}</span>
+  return `<div class="task-row sortable-task-row" data-task-id="${t.id}" data-task-done="${t.done?'1':'0'}" style="border-left-color:var(--ink-faint);">
+    <span class="task-title ${t.done?'done':''}" data-open-pool-detail="${t.id}">${escapeHtml(t.title)}</span>
+    <button type="button" class="drag-handle" aria-label="순서 바꾸기" title="끌어서 순서 바꾸기">⠿</button>
     <div class="row-actions"><button data-delete-task="${t.id}">✕</button></div>
   </div>`;
 }
@@ -919,7 +963,7 @@ function renderMonthView(){
           <input type="text" id="month-pool-input" placeholder="한 줄로 적기" data-enter-add="month-pool">
           <button class="inline-reg-btn" data-save-month-pool>추가</button>
         </div>
-        ${fuzzy.length ? fuzzy.map(t=>poolRowHtml(t)).join('') : '<div class="pool-empty">비어있어</div>'}
+        <div class="sortable-task-list" data-sort-context="month|${mKey}">${fuzzy.length ? sortTasksForDisplay(fuzzy).map(t=>poolRowHtml(t)).join('') : '<div class="pool-empty">비어있어</div>'}</div>
       </div>
       <div class="faint">항목을 누르면 마감 일자를 정할 수 있어 (정하면 오늘 탭에 태스크로 등록돼)</div>
     </div>
@@ -969,7 +1013,7 @@ function renderWeekView(){
           <input type="text" id="week-pool-input" placeholder="한 줄로 적기" data-enter-add="week-pool">
           <button class="inline-reg-btn" data-save-week-pool>추가</button>
         </div>
-        ${pool.length ? pool.map(t=>poolRowHtml(t)).join('') : '<div class="pool-empty">비어있어</div>'}
+        <div class="sortable-task-list" data-sort-context="week|${wKey}">${pool.length ? sortTasksForDisplay(pool).map(t=>poolRowHtml(t)).join('') : '<div class="pool-empty">비어있어</div>'}</div>
       </div>
       <div class="faint">항목을 누르면 마감 일자를 정할 수 있어 (정하면 오늘 탭에 태스크로 등록돼)</div>
     </div>
@@ -1017,7 +1061,7 @@ function renderProfileView(){
     ${accountHtml}
     <div class="field-label" style="text-align:center;margin-bottom:10px;">테마 색상</div>
     <div class="theme-row">
-      ${THEMES.map(t=>`<button class="theme-opt ${state.settings.theme===t.id?'selected':''}" style="background:${t.color}" data-pick-theme="${t.id}"></button>`).join('')}
+      ${THEMES.map(t=>`<button class="theme-opt ${state.settings.theme===t.id?'selected':''}" style="background:${t.color}" data-pick-theme="${t.id}" title="${t.label}" aria-label="${t.label} 테마"></button>`).join('')}
     </div>
     <div class="section-title" style="margin-top:26px;">🎵 플레이리스트</div>
     <div class="inline-add-row">
@@ -1090,6 +1134,7 @@ document.addEventListener('click', (e)=>{
 
   if(t.matches('[data-cat-quickadd]')){
     const id = t.getAttribute('data-cat-quickadd');
+    scheduleAddOpen = false; renamingCatId = null;
     openCatAddId = (openCatAddId===id) ? null : id;
     render();
     if(openCatAddId===id){ const inp=document.getElementById('cat-add-input-'+id); if(inp) inp.focus(); }
@@ -1097,6 +1142,7 @@ document.addEventListener('click', (e)=>{
   }
   if(t.matches('[data-cat-rename]')){
     const id = t.getAttribute('data-cat-rename');
+    scheduleAddOpen = false; openCatAddId = null;
     renamingCatId = (renamingCatId===id) ? null : id;
     render();
     if(renamingCatId===id){ const inp=document.getElementById('rename-input-'+id); if(inp){ inp.focus(); inp.select(); } }
@@ -1104,6 +1150,7 @@ document.addEventListener('click', (e)=>{
   }
   if(t.matches('[data-save-cat-task]')){ saveCatTask(t.getAttribute('data-save-cat-task')); return; }
   if(t.matches('[data-toggle-schedule-add]')){
+    openCatAddId = null; renamingCatId = null;
     scheduleAddOpen = true; scheduleRepeatDaysSelected = new Set(); render();
     const inp=document.getElementById('sched-title-input'); if(inp) inp.focus();
     return;
@@ -1151,7 +1198,87 @@ document.addEventListener('click', (e)=>{
     state.profile.status = document.getElementById('profile-status').value.trim();
     scheduleSave(); showToast('저장했어'); render(); return;
   }
+
+  /* 일정/할 일 입력창은 바깥의 빈 공간을 누르면 조용히 닫기 */
+  const inlineOpen = scheduleAddOpen || openCatAddId!==null || renamingCatId!==null;
+  const insideInline = t.closest && t.closest('[data-inline-editor], [data-cat-quickadd], [data-toggle-schedule-add], [data-cat-rename]');
+  if(inlineOpen && !insideInline){ resetInlineStates(); render(); }
 });
+
+/* ================= 할 일 드래그 정렬 ================= */
+let taskDrag = null;
+let suppressDragHandleClickUntil = 0;
+
+function finishTaskDrag(cancelled=false){
+  if(!taskDrag) return;
+  const {row, container, pointerId, handle, started} = taskDrag;
+  try{ if(handle.hasPointerCapture && handle.hasPointerCapture(pointerId)) handle.releasePointerCapture(pointerId); }catch(e){}
+  row.classList.remove('dragging');
+
+  if(started && !cancelled){
+    const rows = [...container.querySelectorAll(':scope > .sortable-task-row')];
+    rows.forEach((el,index)=>{
+      const task = state.tasks.find(x=>x.id===el.dataset.taskId);
+      if(task) task.sortOrder = (index + 1) * 1000;
+    });
+    scheduleSave();
+    suppressDragHandleClickUntil = Date.now() + 350;
+    render();
+  }else if(cancelled && started){
+    render();
+  }
+  taskDrag = null;
+}
+
+document.addEventListener('pointerdown', e=>{
+  const handle = e.target.closest ? e.target.closest('.drag-handle') : null;
+  if(!handle || e.button > 0) return;
+  const row = handle.closest('.sortable-task-row');
+  const container = row?.parentElement;
+  if(!row || !container?.classList.contains('sortable-task-list')) return;
+  taskDrag = {
+    handle, row, container, pointerId:e.pointerId, startY:e.clientY,
+    done:row.dataset.taskDone, started:false
+  };
+  try{ handle.setPointerCapture(e.pointerId); }catch(err){}
+  e.preventDefault();
+});
+
+document.addEventListener('pointermove', e=>{
+  if(!taskDrag || e.pointerId!==taskDrag.pointerId) return;
+  const distance = Math.abs(e.clientY - taskDrag.startY);
+  if(!taskDrag.started){
+    if(distance < 5) return;
+    taskDrag.started = true;
+    taskDrag.row.classList.add('dragging');
+  }
+  e.preventDefault();
+
+  const viewportEdge = 70;
+  if(e.clientY < viewportEdge) window.scrollBy(0, -10);
+  else if(e.clientY > window.innerHeight - viewportEdge) window.scrollBy(0, 10);
+
+  const under = document.elementFromPoint(e.clientX, e.clientY);
+  const target = under?.closest ? under.closest('.sortable-task-row') : null;
+  if(!target || target===taskDrag.row || target.parentElement!==taskDrag.container) return;
+  /* 완료/미완료 경계는 넘지 않게 유지: 완료 항목은 항상 아래에 표시 */
+  if(target.dataset.taskDone !== taskDrag.done) return;
+  const rect = target.getBoundingClientRect();
+  const before = e.clientY < rect.top + rect.height / 2;
+  taskDrag.container.insertBefore(taskDrag.row, before ? target : target.nextSibling);
+}, {passive:false});
+
+document.addEventListener('pointerup', e=>{
+  if(taskDrag && e.pointerId===taskDrag.pointerId) finishTaskDrag(false);
+});
+document.addEventListener('pointercancel', e=>{
+  if(taskDrag && e.pointerId===taskDrag.pointerId) finishTaskDrag(true);
+});
+document.addEventListener('click', e=>{
+  if(Date.now() < suppressDragHandleClickUntil && e.target.closest?.('.drag-handle')){
+    e.preventDefault(); e.stopImmediatePropagation();
+  }
+}, true);
 
 function isImeEnter(e){ return e.isComposing || e.keyCode===229; }
 
@@ -1198,7 +1325,7 @@ function saveCatTask(catId){
   const title = inp.value.trim();
   if(!title) return;
   const viewDate = drillDate || new Date();
-  state.tasks.push({ id:uid(), title, done:false, scope:'day', date:fmtDate(viewDate), time:null, categoryId:catId, memo:'', location:'', createdAt:Date.now() });
+  state.tasks.push({ id:uid(), title, done:false, scope:'day', date:fmtDate(viewDate), time:null, categoryId:catId, memo:'', location:'', createdAt:Date.now(), sortOrder:nextTaskSortOrder() });
   scheduleSave(); render();
   const again = document.getElementById('cat-add-input-'+catId);
   if(again) again.focus();
@@ -1216,7 +1343,7 @@ function saveSchedule(){
     showToast('반복 일정으로 등록했어');
   } else {
     const viewDate = drillDate || new Date();
-    state.tasks.push({ id:uid(), title, done:false, scope:'day', date:fmtDate(viewDate), time, categoryId:null, memo:'', location:'', createdAt:Date.now() });
+    state.tasks.push({ id:uid(), title, done:false, scope:'day', date:fmtDate(viewDate), time, categoryId:null, memo:'', location:'', createdAt:Date.now(), sortOrder:nextTaskSortOrder() });
   }
   scheduleAddOpen=false; scheduleRepeatDaysSelected=new Set();
   scheduleSave(); render();
@@ -1226,7 +1353,7 @@ function savePoolTask(scope){
   if(!inp) return;
   const title = inp.value.trim();
   if(!title){ showToast('내용을 입력해줘'); return; }
-  const task = { id:uid(), title, done:false, categoryId:null, memo:'', location:'', createdAt:Date.now() };
+  const task = { id:uid(), title, done:false, categoryId:null, memo:'', location:'', createdAt:Date.now(), sortOrder:nextTaskSortOrder() };
   if(scope==='week'){ task.scope='week'; task.weekKey = fmtDate(weekCursor); }
   else { task.scope='month'; task.monthKey = monthKeyOf(monthCursor); }
   state.tasks.push(task); scheduleSave(); render();
@@ -1321,7 +1448,7 @@ function openMoveSheet(id){
   };
 }
 function applyTaskDate(task, dateStr){
-  task.scope='day'; task.date=dateStr; task.weekKey=null; task.monthKey=null;
+  task.scope='day'; task.date=dateStr; task.weekKey=null; task.monthKey=null; task.sortOrder=nextTaskSortOrder();
   scheduleSave(); closeSheet(); render(); showToast('옮겼어');
 }
 
@@ -1407,7 +1534,7 @@ function openPoolItemSheet(id){
     task.memo = document.getElementById('pi-memo').value.trim();
     task.categoryId = selectedCat || null;
     if(dateVal){
-      task.scope='day'; task.date=dateVal; task.weekKey=null; task.monthKey=null;
+      task.scope='day'; task.date=dateVal; task.weekKey=null; task.monthKey=null; task.sortOrder=nextTaskSortOrder();
       showToast('오늘 탭에 태스크로 등록했어');
     } else {
       showToast('저장했어');
