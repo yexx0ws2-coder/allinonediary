@@ -58,6 +58,12 @@ body{ margin:0; padding:0; width:100%; min-height:100vh; min-height:100dvh; colo
 .mini-playlist-text{ font-size:10px; color:var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:80px; text-align:right;}
 
 .hero{ display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+.day-hero-wrap{ display:flex; align-items:center; gap:2px; margin-bottom:18px; width:100%; }
+.day-hero-wrap .hero{ flex:1; min-width:0; margin-bottom:0; }
+.day-nav-arrow{ width:23px; height:38px; flex:0 0 23px; padding:0; border:none; background:none; color:var(--ink-faint); font-size:23px; font-weight:400; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.day-nav-arrow:active{ color:var(--primary-deep); transform:scale(.92); }
+.today-return-btn{ margin-left:7px; padding:2px 7px; border:1px solid var(--line); border-radius:10px; background:var(--card); color:var(--primary-deep); font-family:inherit; font-size:10px; font-weight:700; cursor:pointer; vertical-align:1px; }
+
 .hero-badge{ width:56px;height:56px;border-radius:50%; background:radial-gradient(circle at 30% 30%, var(--primary-tint), var(--bg-deep) 70%); display:flex;align-items:center;justify-content:center; font-size:22px;font-weight:700;color:var(--primary-deep); flex-shrink:0;}
 .hero-text{ flex:1; min-width:0; }
 .hero-text .hero-date{ font-size:17px; font-weight:700; }
@@ -79,7 +85,8 @@ body{ margin:0; padding:0; width:100%; min-height:100vh; min-height:100dvh; colo
 .schedule-title{ font-size:14px; flex:1; min-width:0; overflow-wrap:anywhere; cursor:pointer;}
 .repeat-tag{ font-size:10px; }
 
-.cat-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:7px; }
+.cat-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px; }
+.cat-head-actions{ display:flex; align-items:center; gap:1px; flex-shrink:0; }
 .cat-add-label{ background:none; border:none; cursor:pointer; font-size:12.5px; font-weight:700; color:var(--ink-soft); display:flex; align-items:center; gap:6px; padding:2px 0;}
 .cat-dot{ width:8px;height:8px;border-radius:50%; flex-shrink:0; display:inline-block;}
 .chip-row-wrap{ display:flex; flex-wrap:wrap; gap:8px; }
@@ -129,6 +136,12 @@ body{ margin:0; padding:0; width:100%; min-height:100vh; min-height:100dvh; colo
 .chk-sm.done{ background:var(--primary); color:#fff;}
 .goal-item-text{ flex:1; min-width:0; overflow-wrap:anywhere;}
 .goal-item-text.done{ text-decoration:line-through; color:var(--ink-faint);}
+.goal-item-main{ flex:1; min-width:0; display:flex; align-items:center; justify-content:space-between; gap:7px; padding:2px 0; border:none; background:none; color:inherit; font-family:inherit; text-align:left; cursor:pointer; }
+.goal-item-main.static{ cursor:default; }
+.goal-date-chip{ flex-shrink:0; padding:2px 6px; border-radius:9px; background:var(--primary-tint); color:var(--primary-deep); font-family:'JetBrains Mono',monospace; font-size:9.5px; font-weight:700; white-space:nowrap; }
+.goal-date-chip.empty{ background:var(--bg-deep); color:var(--ink-faint); font-family:inherit; }
+.summary-date-chip{ margin-left:auto; padding:1px 5px; border-radius:8px; background:var(--primary-tint); color:var(--primary-deep); font-family:'JetBrains Mono',monospace; font-size:8.5px; white-space:nowrap; }
+
 
 .lvl-nav{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
 .lvl-nav .lvl-title{ font-size:17px; font-weight:700; }
@@ -142,6 +155,17 @@ body{ margin:0; padding:0; width:100%; min-height:100vh; min-height:100dvh; colo
 .cal-dow{ min-width:0; text-align:center; font-size:10px; color:var(--ink-faint); padding-bottom:3px; overflow:hidden;}
 .cal-cell{ width:100%; min-width:0; max-width:100%; aspect-ratio:0.82; border-radius:10px; padding:4px 2px 3px; cursor:pointer; background:var(--card); display:flex; flex-direction:column; align-items:center; gap:2px; border:1px solid transparent; overflow:hidden;}
 .cal-cell.today{ background:var(--primary-tint); border-color:var(--primary); }
+.cal-cell.selected{ border-color:var(--primary-deep); box-shadow:inset 0 0 0 1px var(--primary-deep); }
+.calendar-day-detail{ background:var(--card); border-radius:15px; padding:13px 13px 8px; box-shadow:var(--shadow-soft); margin-top:4px; }
+.calendar-detail-head{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:12px; }
+.calendar-detail-date{ font-size:14px; font-weight:800; }
+.calendar-detail-sub{ color:var(--ink-soft); font-size:10.5px; }
+.calendar-detail-section{ margin-bottom:13px; }
+.calendar-detail-section:last-child{ margin-bottom:4px; }
+.calendar-detail-title{ margin-bottom:7px; color:var(--ink-soft); font-size:11px; font-weight:700; }
+.calendar-goal-row{ display:flex; align-items:center; gap:8px; padding:7px 2px; border-bottom:1px solid var(--line); }
+.calendar-goal-row:last-child{ border-bottom:none; }
+
 .cal-cell.other-month{ opacity:0.3; }
 .cal-daynum{ max-width:100%; font-family:'JetBrains Mono',monospace; font-size:11.5px; font-weight:600; overflow:hidden;}
 .cal-dots{ display:flex; gap:2px; flex-wrap:wrap; justify-content:center; }
@@ -253,9 +277,9 @@ textarea{ min-height:65px; resize:vertical; }
   <div id="view-container"></div>
   <div id="bottom-nav">
     <button class="nav-item" data-nav-tab="year"><span class="nav-icon">🗓</span>연간</button>
-    <button class="nav-item" data-nav-tab="month"><span class="nav-icon">📅</span>월간</button>
     <button class="nav-item" data-nav-tab="week"><span class="nav-icon">📌</span>주간</button>
     <button class="nav-item" data-nav-tab="today"><span class="nav-icon">🏠</span>오늘</button>
+    <button class="nav-item" data-nav-tab="calendar"><span class="nav-icon">📅</span>캘린더</button>
     <button class="nav-item" data-nav-tab="profile"><span class="nav-icon">👤</span>나</button>
   </div>
 </div>
@@ -316,6 +340,8 @@ let drillFrom = null;
 let yearCursor = new Date().getFullYear();
 let monthCursor = new Date(); monthCursor.setDate(1);
 let weekCursor = getMonday(new Date());
+let todayCursor = new Date(); todayCursor.setHours(0,0,0,0);
+let calendarSelectedDate = new Date(); calendarSelectedDate.setHours(0,0,0,0);
 
 let openCatAddId = null;
 let renamingCatId = null;
@@ -340,10 +366,14 @@ function normalizeState(parsed){
   merged.routines = Array.isArray(merged.routines) ? merged.routines : [];
   merged.recurringSchedules = Array.isArray(merged.recurringSchedules) ? merged.recurringSchedules : [];
   merged.recurringScheduleExceptions = (merged.recurringScheduleExceptions && typeof merged.recurringScheduleExceptions==='object') ? merged.recurringScheduleExceptions : {};
+  merged.yearGoalItems = (merged.yearGoalItems && typeof merged.yearGoalItems==='object') ? merged.yearGoalItems : {};
+  merged.monthGoalItems = (merged.monthGoalItems && typeof merged.monthGoalItems==='object') ? merged.monthGoalItems : {};
+  merged.routineCompletions = (merged.routineCompletions && typeof merged.routineCompletions==='object') ? merged.routineCompletions : {};
+  merged.categories = Array.isArray(merged.categories) ? merged.categories : [];
+
   merged.routines.forEach((routine,index)=>{
     routine.sortOrder = Number.isFinite(Number(routine.sortOrder)) ? Number(routine.sortOrder) : (index+1)*1000;
   });
-  /* 기존 데이터에도 안정적인 수동 정렬값을 부여 */
   merged.tasks.forEach((task, index)=>{
     if(!Number.isFinite(Number(task.sortOrder))){
       task.sortOrder = Number(task.createdAt) || (index + 1) * 1000;
@@ -365,10 +395,36 @@ function normalizeState(parsed){
     Object.keys(parsed.monthGoals).forEach(k=>{
       const txt = (parsed.monthGoals[k] || '').trim();
       if(txt && (!merged.monthGoalItems[k] || !merged.monthGoalItems[k].length)){
-        merged.monthGoalItems[k] = [{id:uid(), text:txt, done:false}];
+        merged.monthGoalItems[k] = [{id:uid(), text:txt, done:false, dueDate:''}];
       }
     });
   }
+
+  /* 폐기된 '이번 달 안에' 항목은 잃지 않고 같은 달의 월간 목표로 옮김 */
+  const legacyMonthTasks = merged.tasks.filter(task=>task.scope==='month' && task.monthKey);
+  legacyMonthTasks.forEach(task=>{
+    const key = task.monthKey;
+    if(!Array.isArray(merged.monthGoalItems[key])) merged.monthGoalItems[key]=[];
+    if(!merged.monthGoalItems[key].some(item=>item.id===task.id)){
+      merged.monthGoalItems[key].push({
+        id:task.id || uid(), text:task.title || '', done:!!task.done,
+        dueDate:task.dueDate || '', memo:task.memo || '', location:task.location || ''
+      });
+    }
+  });
+  if(legacyMonthTasks.length) merged.tasks = merged.tasks.filter(task=>task.scope!=='month');
+
+  Object.keys(merged.monthGoalItems).forEach(key=>{
+    if(!Array.isArray(merged.monthGoalItems[key])) merged.monthGoalItems[key]=[];
+    merged.monthGoalItems[key].forEach(item=>{
+      item.dueDate = typeof item.dueDate==='string' ? item.dueDate : '';
+      item.done = !!item.done;
+    });
+  });
+  Object.keys(merged.yearGoalItems).forEach(key=>{
+    if(!Array.isArray(merged.yearGoalItems[key])) merged.yearGoalItems[key]=[];
+    merged.yearGoalItems[key].forEach(item=>{ item.done=!!item.done; });
+  });
   return merged;
 }
 
@@ -626,6 +682,33 @@ function weekKeyOf(d){ return fmtDate(getMonday(d)); }
 function isSameDate(a,b){ return fmtDate(a)===fmtDate(b); }
 function todayStr(){ return fmtDate(new Date()); }
 function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function currentDayViewDate(){
+  if(drillDate) return new Date(drillDate);
+  if(activeTab==='today') return new Date(todayCursor);
+  return new Date();
+}
+function shiftTodayDate(amount){
+  todayCursor = addDays(todayCursor, amount);
+  todayCursor.setHours(0,0,0,0);
+  resetInlineStates(); render();
+}
+function returnToday(){
+  todayCursor = new Date(); todayCursor.setHours(0,0,0,0);
+  resetInlineStates(); render();
+}
+function formatGoalDate(dateStr){
+  if(!dateStr) return '';
+  const d=parseDate(dateStr);
+  return `${d.getMonth()+1}.${d.getDate()}`;
+}
+function sortGoalItemsForDisplay(items){
+  return [...items].sort((a,b)=>{
+    if(!!a.done!==!!b.done) return a.done ? 1 : -1;
+    const ad=a.dueDate || '9999-99-99', bd=b.dueDate || '9999-99-99';
+    return ad.localeCompare(bd);
+  });
+}
+
 
 /* ================= 조회 헬퍼 ================= */
 function catById(id){ return state.categories.find(c=>c.id===id); }
@@ -672,6 +755,15 @@ function goalItemsFor(scope,key){
   if(!store[key]) store[key]=[];
   return store[key];
 }
+function monthGoalsDueOn(dateStr){
+  return goalItemsFor('month', dateStr.slice(0,7)).filter(item=>item.dueDate===dateStr);
+}
+function calendarDotColors(dateStr){
+  const colors = dayDotColors(dateStr);
+  if(monthGoalsDueOn(dateStr).length) colors.push('var(--primary)');
+  return colors;
+}
+
 
 /* ================= 렌더 ================= */
 function render(){
@@ -682,22 +774,28 @@ function render(){
   const c = document.getElementById('view-container');
   if(drillDate){ c.innerHTML = renderDayView(drillDate, false); }
   else if(activeTab==='year'){ c.innerHTML = renderYearView(); }
-  else if(activeTab==='month'){ c.innerHTML = renderMonthView(); }
+  else if(activeTab==='calendar'){ c.innerHTML = renderCalendarView(); }
   else if(activeTab==='week'){ c.innerHTML = renderWeekView(); }
   else if(activeTab==='profile'){ c.innerHTML = renderProfileView(); }
-  else { c.innerHTML = renderDayView(new Date(), true); }
+  else { c.innerHTML = renderDayView(todayCursor, true); }
 }
 
 /* ---- 목표 체크리스트 공통 ---- */
 function goalChecklistHtml(scope,key){
-  const items = goalItemsFor(scope,key);
-  const rows = items.map(it=>`
-    <div class="goal-item-row">
+  const items = sortGoalItemsForDisplay(goalItemsFor(scope,key));
+  const rows = items.map(it=>{
+    const dateChip = scope==='month'
+      ? `<span class="goal-date-chip ${it.dueDate?'':'empty'}">${it.dueDate?formatGoalDate(it.dueDate):'날짜'}</span>`
+      : '';
+    const main = scope==='month'
+      ? `<button class="goal-item-main" data-open-month-goal="${key}|${it.id}"><span class="goal-item-text ${it.done?'done':''}">${escapeHtml(it.text)}</span>${dateChip}</button>`
+      : `<div class="goal-item-main static"><span class="goal-item-text ${it.done?'done':''}">${escapeHtml(it.text)}</span></div>`;
+    return `<div class="goal-item-row">
       <button class="chk-sm ${it.done?'done':''}" data-goal-toggle="${scope}|${key}|${it.id}">${it.done?'✓':''}</button>
-      <span class="goal-item-text ${it.done?'done':''}">${escapeHtml(it.text)}</span>
+      ${main}
       <button class="icon-btn-plain" style="font-size:11px;" data-goal-delete="${scope}|${key}|${it.id}">✕</button>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
   return `
     ${rows || '<div class="faint">목표 없음</div>'}
     <div class="inline-add-row-sm">
@@ -711,18 +809,30 @@ function addGoalFromInput(scope,key){
   if(!inp) return;
   const text = inp.value.trim();
   if(!text) return;
-  goalItemsFor(scope,key).push({id:uid(), text, done:false});
+  goalItemsFor(scope,key).push({id:uid(), text, done:false, dueDate:''});
   scheduleSave(); render();
 }
 
 /* ---- 오늘/데이 뷰 ---- */
+function scheduleRowHtml(s){
+  return `<div class="schedule-row">
+    <span class="time-pill mono">${s.time}</span>
+    <span class="schedule-title" data-open-detail="${s.kind==='recurring'?'recur:'+s.id:s.id}">${escapeHtml(s.title)}${s.kind==='recurring' ? `<span class="repeat-tag"> 🔁${s.hasException?'·':''}</span>` : ''}</span>
+    <div class="row-actions">
+      ${s.kind==='oneoff' ? `<button data-open-move="${s.id}">→</button><button data-delete-task="${s.id}">✕</button>` : `<button data-edit-recurring="${s.id}" data-recurring-date="${s.date}">⚙</button>`}
+    </div>
+  </div>`;
+}
+
 function renderDayView(date, isHome){
+  date = new Date(date); date.setHours(0,0,0,0);
   const dStr = fmtDate(date);
   const dayTasks = tasksForDate(dStr);
   const schedule = scheduleForDate(date);
   const regular = sortTasksForDisplay(dayTasks.filter(t=>!t.time));
   const routines = routinesForDate(date);
   const mood = state.moods[dStr];
+  const isToday = isSameDate(date,new Date());
 
   const groups = {};
   regular.forEach(t=>{ const key=t.categoryId||'none'; if(!groups[key]) groups[key]=[]; groups[key].push(t); });
@@ -746,32 +856,23 @@ function renderDayView(date, isHome){
     </div>`;
   }
 
-  let backBtn = isHome ? '' : `<button class="ghost-add" data-drill-back style="margin-bottom:10px;">‹ 뒤로</button>`;
-
-  const hero = `
-    <div class="hero">
-      <div class="hero-badge">${date.getDate()}</div>
-      <div class="hero-text">
-        <div class="hero-date">${date.getMonth()+1}월 ${date.getDate()}일</div>
-        <div class="hero-sub">${isSameDate(date,new Date())?'오늘':DOW_KR[date.getDay()]+'요일'}</div>
-      </div>
-      <button class="mood-btn ${mood?'set':''}" data-open-mood="${dStr}">${mood?mood.emoji:'＋'}</button>
+  const backBtn = isHome ? '' : `<button class="ghost-add" data-drill-back style="margin-bottom:10px;">‹ 뒤로</button>`;
+  const heroCore = `<div class="hero">
+    <div class="hero-badge">${date.getDate()}</div>
+    <div class="hero-text">
+      <div class="hero-date">${date.getMonth()+1}월 ${date.getDate()}일</div>
+      <div class="hero-sub">${isToday?'오늘':DOW_KR[date.getDay()]+'요일'}${isHome&&!isToday?'<button class="today-return-btn" data-day-today>오늘로</button>':''}</div>
     </div>
-  `;
+    <button class="mood-btn ${mood?'set':''}" data-open-mood="${dStr}">${mood?mood.emoji:'＋'}</button>
+  </div>`;
+  const hero = isHome
+    ? `<div class="day-hero-wrap" data-day-swipe><button class="day-nav-arrow" data-day-shift="-1" aria-label="전날">‹</button>${heroCore}<button class="day-nav-arrow" data-day-shift="1" aria-label="다음날">›</button></div>`
+    : heroCore;
 
-  let scheduleItems = schedule.map(s=>`
-    <div class="schedule-row">
-      <span class="time-pill mono">${s.time}</span>
-      <span class="schedule-title" data-open-detail="${s.kind==='recurring'?'recur:'+s.id:s.id}">${escapeHtml(s.title)}${s.kind==='recurring' ? `<span class="repeat-tag"> 🔁${s.hasException?'·':''}</span>` : ''}</span>
-      <div class="row-actions">
-        ${s.kind==='oneoff' ? `<button data-open-move="${s.id}">→</button><button data-delete-task="${s.id}">✕</button>` : `<button data-edit-recurring="${s.id}" data-recurring-date="${s.date}">⚙</button>`}
-      </div>
-    </div>
-  `).join('');
+  const scheduleItems = schedule.map(scheduleRowHtml).join('');
   let scheduleAddRow = '';
   if(scheduleAddOpen){
-    scheduleAddRow = `
-      <div data-inline-editor="schedule">
+    scheduleAddRow = `<div data-inline-editor="schedule">
       <div class="inline-add-row">
         <input type="time" id="sched-time-input" value="09:00">
         <input type="text" id="sched-title-input" placeholder="일정 한 줄로" data-enter-add="schedule">
@@ -783,9 +884,8 @@ function renderDayView(date, isHome){
       <div class="dow-row" id="sched-repeat-days" style="display:none;">
         ${DOW_KR.map((d,i)=>`<button type="button" class="dow-btn" data-repeat-dow="${i}">${d}</button>`).join('')}
       </div>
-      </div>
-    `;
-  } else {
+    </div>`;
+  }else{
     scheduleAddRow = `<button class="ghost-add" data-toggle-schedule-add><span class="plus-badge">+</span>일정 추가</button>`;
   }
 
@@ -796,27 +896,21 @@ function renderDayView(date, isHome){
     const headLabel = isRenaming
       ? `<input type="text" id="rename-input-${cat.id}" value="${escapeHtml(cat.name)}" style="max-width:140px;padding:4px 8px;font-size:13px;">`
       : `<button class="cat-add-label" data-cat-quickadd="${cat.id}"><span class="cat-dot" style="background:${cat.color}"></span>${escapeHtml(cat.name)} <span class="plus-badge">+</span></button>`;
-    catSectionsHtml += `
-      <div class="section">
-        <div class="cat-head">${headLabel}<button class="icon-btn-plain" data-cat-rename="${cat.id}">✎</button></div>
-        <div class="sortable-task-list" data-sort-context="day|${dStr}|${cat.id}">${sortTasksForDisplay(items).map(t=>taskRowHtml(t, cat.color)).join('')}</div>
-        ${openCatAddId===cat.id ? `
-          <div data-inline-editor="task" class="inline-add-row">
-            <input type="text" id="cat-add-input-${cat.id}" placeholder="한 줄로 적기" data-enter-add="cat|${cat.id}">
-            <button class="inline-reg-btn" data-save-cat-task="${cat.id}">추가</button>
-          </div>
-        ` : ''}
-      </div>
-    `;
+    catSectionsHtml += `<div class="section">
+      <div class="cat-head">${headLabel}<div class="cat-head-actions"><button class="icon-btn-plain" data-cat-rename="${cat.id}" aria-label="카테고리 이름 수정">✎</button><button class="icon-btn-plain" data-cat-delete="${cat.id}" aria-label="카테고리 삭제">✕</button></div></div>
+      <div class="sortable-task-list" data-sort-context="day|${dStr}|${cat.id}">${sortTasksForDisplay(items).map(t=>taskRowHtml(t, cat.color)).join('')}</div>
+      ${openCatAddId===cat.id ? `<div data-inline-editor="task" class="inline-add-row">
+        <input type="text" id="cat-add-input-${cat.id}" placeholder="한 줄로 적기" data-enter-add="cat|${cat.id}">
+        <button class="inline-reg-btn" data-save-cat-task="${cat.id}">추가</button>
+      </div>` : ''}
+    </div>`;
   });
   const groupNone = groups['none'] || [];
   if(groupNone.length){
-    catSectionsHtml += `
-      <div class="section">
-        <div class="cat-head"><span class="section-title" style="margin:0;">미분류</span></div>
-        <div class="sortable-task-list" data-sort-context="day|${dStr}|none">${sortTasksForDisplay(groupNone).map(t=>taskRowHtml(t, '#CBBBBC')).join('')}</div>
-      </div>
-    `;
+    catSectionsHtml += `<div class="section">
+      <div class="cat-head"><span class="section-title" style="margin:0;">미분류</span></div>
+      <div class="sortable-task-list" data-sort-context="day|${dStr}|none">${sortTasksForDisplay(groupNone).map(t=>taskRowHtml(t, '#CBBBBC')).join('')}</div>
+    </div>`;
   }
   catSectionsHtml += `<button class="ghost-add new-category-action" data-open-category-sheet><span class="plus-badge">+</span>새 카테고리</button>`;
 
@@ -826,68 +920,39 @@ function renderDayView(date, isHome){
     PERIODS.forEach(([key,label])=>{
       const list = routines.filter(r=>(r.period||'morning')===key);
       if(!list.length) return;
-      periodBlocks += `
-        <div style="margin-bottom:8px;">
-          <div class="faint" style="margin-bottom:4px;">${label}</div>
-          ${list.map(r=>{
-            const done = isRoutineDone(r.id, dStr);
-            return `<div class="routine-row">
-              <button class="chk ${done?'done':''}" style="border-color:var(--ink-faint); ${done?'background:var(--ink-faint);color:#fff;':''}" data-toggle-routine="${r.id}" data-date="${dStr}">${done?'✓':''}</button>
-              <span class="task-title ${done?'done':''}" style="cursor:default;">${escapeHtml(r.title)}</span>
-            </div>`;
-          }).join('')}
-        </div>
-      `;
+      periodBlocks += `<div style="margin-bottom:8px;"><div class="faint" style="margin-bottom:4px;">${label}</div>
+        ${list.map(r=>{ const done=isRoutineDone(r.id,dStr); return `<div class="routine-row">
+          <button class="chk ${done?'done':''}" style="border-color:var(--ink-faint); ${done?'background:var(--ink-faint);color:#fff;':''}" data-toggle-routine="${r.id}" data-date="${dStr}">${done?'✓':''}</button>
+          <span class="task-title ${done?'done':''}" style="cursor:default;">${escapeHtml(r.title)}</span>
+        </div>`; }).join('')}</div>`;
     });
-    routineHtml = `
-      <div class="section">
-        <div class="cat-head"><span class="section-title" style="margin:0;">🔁 오늘의 루틴</span><button class="icon-btn-plain" data-open-routine-modal>⚙</button></div>
-        <div class="routine-card">${periodBlocks}</div>
-      </div>
-    `;
-  } else {
+    routineHtml = `<div class="section"><div class="cat-head"><span class="section-title" style="margin:0;">🔁 오늘의 루틴</span><button class="icon-btn-plain" data-open-routine-modal>⚙</button></div><div class="routine-card">${periodBlocks}</div></div>`;
+  }else{
     routineHtml = `<div class="section"><button class="ghost-add" data-open-routine-modal><span class="plus-badge">+</span>루틴 관리</button></div>`;
   }
 
-  let emptyAll = (!schedule.length && !regular.length) ? `<div class="empty-hub"><div class="big">🌤️</div>오늘 계획이 비어있어<br><span style="font-size:12px;">위에서 하나씩 채워보자</span></div>` : '';
+  const emptyAll = (!schedule.length && !regular.length) ? `<div class="empty-hub"><div class="big">🌤️</div>이 날 계획이 비어있어<br><span style="font-size:12px;">하나씩 채워보자</span></div>` : '';
 
   let summaryHtml = '';
   if(isHome){
     const wKey = weekKeyOf(date);
     const weekRemain = sortTasksForDisplay(tasksForWeek(wKey).filter(t=>!t.done));
     const mKey = monthKeyOf(date);
-    const monthRemain = sortTasksForDisplay(tasksForMonth(mKey).filter(t=>!t.done));
-    summaryHtml = `
-      <div class="section">
-        <div class="summary-grid">
-          <div class="summary-card" data-nav-tab="week">
-            <h4>이번 주 남은 일</h4>
-            ${weekRemain.length ? weekRemain.slice(0,4).map(t=>`<div class="summary-mini-row"><span class="chk" style="border-color:var(--ink-faint)"></span>${escapeHtml(t.title)}</div>`).join('') + (weekRemain.length>4?`<div class="faint">+${weekRemain.length-4}개 더</div>`:'') : '<div class="faint">없어 ✨</div>'}
-          </div>
-          <div class="summary-card" data-nav-tab="month">
-            <h4>이번 달 안에</h4>
-            ${monthRemain.length ? monthRemain.slice(0,4).map(t=>`<div class="summary-mini-row"><span class="chk" style="border-color:var(--ink-faint)"></span>${escapeHtml(t.title)}</div>`).join('') + (monthRemain.length>4?`<div class="faint">+${monthRemain.length-4}개 더</div>`:'') : '<div class="faint">없어 ✨</div>'}
-          </div>
-        </div>
+    const monthGoals = sortGoalItemsForDisplay(goalItemsFor('month',mKey));
+    summaryHtml = `<div class="section"><div class="summary-grid">
+      <div class="summary-card" data-nav-tab="week"><h4>이번 주 남은 일</h4>
+        ${weekRemain.length ? weekRemain.slice(0,4).map(t=>`<div class="summary-mini-row"><span class="chk" style="border-color:var(--ink-faint)"></span>${escapeHtml(t.title)}</div>`).join('') + (weekRemain.length>4?`<div class="faint">+${weekRemain.length-4}개 더</div>`:'') : '<div class="faint">없어 ✨</div>'}
       </div>
-    `;
+      <div class="summary-card" data-nav-tab="calendar"><h4>이번 달 목표</h4>
+        ${monthGoals.length ? monthGoals.slice(0,4).map(it=>`<div class="summary-mini-row"><span class="chk-sm ${it.done?'done':''}">${it.done?'✓':''}</span><span class="goal-item-text ${it.done?'done':''}">${escapeHtml(it.text)}</span>${it.dueDate?`<span class="summary-date-chip">${formatGoalDate(it.dueDate)}</span>`:''}</div>`).join('') + (monthGoals.length>4?`<div class="faint">+${monthGoals.length-4}개 더</div>`:'') : '<div class="faint">없어 ✨</div>'}
+      </div>
+    </div></div>`;
   }
 
-  return `
-    ${backBtn}
-    ${profileBar}
-    ${hero}
-    <div class="section">
-      <div class="section-title">오늘의 일정</div>
-      ${scheduleItems}
-      ${scheduleAddRow}
-    </div>
+  return `${backBtn}${profileBar}${hero}
+    <div class="section"><div class="section-title">일정</div>${scheduleItems}${scheduleAddRow}</div>
     ${regular.length ? '<div class="sort-hint">⠿를 눌러 끌면 할 일 우선순위를 바꿀 수 있어 · 완료한 일은 아래로 정리돼</div>' : ''}
-    ${catSectionsHtml}
-    ${emptyAll}
-    ${routineHtml}
-    ${summaryHtml}
-  `;
+    ${catSectionsHtml}${emptyAll}${routineHtml}${summaryHtml}`;
 }
 
 function taskRowHtml(t, color){
@@ -935,10 +1000,16 @@ function renderYearView(){
   `;
 }
 
-/* ---- 월간 뷰 ---- */
-function renderMonthView(){
+/* ---- 캘린더 뷰 ---- */
+function renderCalendarView(){
   const mKey = monthKeyOf(monthCursor);
   const year = monthCursor.getFullYear(), month = monthCursor.getMonth();
+  if(monthKeyOf(calendarSelectedDate)!==mKey){
+    const now=new Date();
+    calendarSelectedDate = (now.getFullYear()===year && now.getMonth()===month) ? new Date(now) : new Date(year,month,1);
+    calendarSelectedDate.setHours(0,0,0,0);
+  }
+  const selectedStr=fmtDate(calendarSelectedDate);
   const firstOfMonth = new Date(year,month,1);
   const startOffset = firstOfMonth.getDay();
   const daysInMonth = new Date(year,month+1,0).getDate();
@@ -952,43 +1023,40 @@ function renderMonthView(){
     const cellDate = new Date(year, month, dayNum);
     const otherMonth = dayNum<1 || dayNum>daysInMonth;
     const dStr = fmtDate(cellDate);
-    const colors = dayDotColors(dStr);
+    const colors = calendarDotColors(dStr);
     const sched = scheduleForDate(cellDate)[0];
     let dots=''; colors.slice(0,3).forEach(c=> dots += `<span class="cal-dot" style="background:${c}"></span>`);
     const extra = colors.length>3 ? `<span style="font-size:7.5px;color:var(--ink-faint);">+${colors.length-3}</span>` : '';
-    cells += `<div class="cal-cell ${dStr===todayS?'today':''} ${otherMonth?'other-month':''}" data-goto-date="${dStr}">
-      <span class="cal-daynum">${cellDate.getDate()}</span>
-      <span class="cal-dots">${dots}${extra}</span>
+    cells += `<div class="cal-cell ${dStr===todayS?'today':''} ${dStr===selectedStr?'selected':''} ${otherMonth?'other-month':''}" data-select-calendar-date="${dStr}">
+      <span class="cal-daynum">${cellDate.getDate()}</span><span class="cal-dots">${dots}${extra}</span>
       ${sched?`<span class="cal-sched-label">${escapeHtml(sched.title)}</span>`:''}
     </div>`;
   }
 
-  const fuzzy = tasksForMonth(mKey);
+  const selectedSchedule=scheduleForDate(calendarSelectedDate);
+  const selectedTasks=sortTasksForDisplay(tasksForDate(selectedStr).filter(t=>!t.time));
+  const dueGoals=sortGoalItemsForDisplay(monthGoalsDueOn(selectedStr));
+  const scheduleHtml=selectedSchedule.map(scheduleRowHtml).join('') || '<div class="pool-empty">일정 없음</div>';
+  const taskHtml=selectedTasks.length
+    ? `<div class="sortable-task-list" data-sort-context="day|${selectedStr}|calendar">${selectedTasks.map(t=>{const c=t.categoryId?catById(t.categoryId):null;return taskRowHtml(t,c?.color||'#CBBBBC')}).join('')}</div>`
+    : '<div class="pool-empty">할 일 없음</div>';
+  const dueHtml=dueGoals.length ? `<div class="calendar-detail-section"><div class="calendar-detail-title">이날 마감인 월간 목표</div>${dueGoals.map(it=>`<div class="calendar-goal-row">
+    <button class="chk-sm ${it.done?'done':''}" data-goal-toggle="month|${mKey}|${it.id}">${it.done?'✓':''}</button>
+    <button class="goal-item-main" data-open-month-goal="${mKey}|${it.id}"><span class="goal-item-text ${it.done?'done':''}">${escapeHtml(it.text)}</span><span class="goal-date-chip">${formatGoalDate(it.dueDate)}</span></button>
+  </div>`).join('')}</div>` : '';
 
-  return `
-    <div class="lvl-nav">
-      <button class="lvl-arrow" data-month-nav="-1">‹</button>
-      <span class="lvl-title">${year}년 ${MONTH_NAMES[month]}</span>
-      <button class="lvl-arrow" data-month-nav="1">›</button>
+  return `<div class="lvl-nav">
+      <button class="lvl-arrow" data-month-nav="-1">‹</button><span class="lvl-title">${year}년 ${MONTH_NAMES[month]}</span><button class="lvl-arrow" data-month-nav="1">›</button>
     </div>
-    <div class="goal-box">
-      <div class="section-title" style="margin-bottom:4px;">🎯 이 달 목표</div>
-      ${goalChecklistHtml('month', mKey)}
-    </div>
+    <div class="goal-box"><div class="section-title" style="margin-bottom:4px;">🎯 이 달 목표</div>${goalChecklistHtml('month',mKey)}</div>
     <div class="cal-grid">${cells}</div>
-    <div class="section">
-      <div class="cat-head"><span class="section-title" style="margin:0;">이번 달 안에</span></div>
-      <div class="pool-card">
-        <div class="inline-add-row">
-          <input type="text" id="month-pool-input" placeholder="한 줄로 적기" data-enter-add="month-pool">
-          <button class="inline-reg-btn" data-save-month-pool>추가</button>
-        </div>
-        <div class="sortable-task-list" data-sort-context="month|${mKey}">${fuzzy.length ? sortTasksForDisplay(fuzzy).map(t=>poolRowHtml(t)).join('') : '<div class="pool-empty">비어있어</div>'}</div>
-      </div>
-      <div class="faint">항목을 누르면 마감 일자를 정할 수 있어 (정하면 오늘 탭에 태스크로 등록돼)</div>
-    </div>
-    <div class="faint" style="text-align:center;margin-top:2px;">날짜를 누르면 그 날 상세로 이동해</div>
-  `;
+    <div class="faint" style="text-align:center;margin:-8px 0 13px;">날짜를 누르면 아래 내용이 바뀌어</div>
+    <div class="calendar-day-detail">
+      <div class="calendar-detail-head"><div class="calendar-detail-date">${calendarSelectedDate.getMonth()+1}월 ${calendarSelectedDate.getDate()}일</div><div class="calendar-detail-sub">${selectedStr===todayS?'오늘':DOW_KR[calendarSelectedDate.getDay()]+'요일'}</div></div>
+      <div class="calendar-detail-section"><div class="calendar-detail-title">일정</div>${scheduleHtml}</div>
+      <div class="calendar-detail-section"><div class="calendar-detail-title">할 일</div>${taskHtml}</div>
+      ${dueHtml}
+    </div>`;
 }
 
 /* ---- 주간 뷰 ---- */
@@ -1035,7 +1103,7 @@ function renderWeekView(){
         </div>
         <div class="sortable-task-list" data-sort-context="week|${wKey}">${pool.length ? sortTasksForDisplay(pool).map(t=>poolRowHtml(t)).join('') : '<div class="pool-empty">비어있어</div>'}</div>
       </div>
-      <div class="faint">항목을 누르면 마감 일자를 정할 수 있어 (정하면 오늘 탭에 태스크로 등록돼)</div>
+      <div class="faint">항목을 누르면 마감 일자를 정할 수 있어 (정하면 해당 날짜의 태스크로 등록돼)</div>
     </div>
     <div class="week-strip">${strip}</div>
   `;
@@ -1099,10 +1167,22 @@ document.addEventListener('click', (e)=>{
 
   /* 아이콘·텍스트·빈 여백 어디를 눌러도 해당 탭 버튼 전체를 인식 */
   if(navTarget){
-    activeTab = navTarget.getAttribute('data-nav-tab'); drillDate=null; drillFrom=null;
+    const nextTab = navTarget.getAttribute('data-nav-tab');
+    if(nextTab==='calendar' && activeTab==='today' && !drillDate){
+      monthCursor=new Date(todayCursor.getFullYear(),todayCursor.getMonth(),1);
+      calendarSelectedDate=new Date(todayCursor);
+    }
+    activeTab = nextTab; drillDate=null; drillFrom=null;
     resetInlineStates(); render(); return;
   }
   if(t.matches('[data-drill-back]')){ drillDate=null; resetInlineStates(); render(); return; }
+  if(t.matches('[data-day-shift]')){ shiftTodayDate(parseInt(t.getAttribute('data-day-shift'))); return; }
+  if(t.matches('[data-day-today]')){ returnToday(); return; }
+  if(t.matches('[data-select-calendar-date]')){
+    calendarSelectedDate = parseDate(t.getAttribute('data-select-calendar-date'));
+    if(monthKeyOf(calendarSelectedDate)!==monthKeyOf(monthCursor)) monthCursor=new Date(calendarSelectedDate.getFullYear(),calendarSelectedDate.getMonth(),1);
+    resetInlineStates(); render(); return;
+  }
   if(t.matches('[data-goto-date]')){
     drillDate = parseDate(t.getAttribute('data-goto-date'));
     drillFrom = activeTab;
@@ -1111,12 +1191,18 @@ document.addEventListener('click', (e)=>{
   if(t.matches('[data-goto-month]')){
     const m = parseInt(t.getAttribute('data-goto-month'));
     monthCursor = new Date(yearCursor, m, 1);
-    activeTab='month'; drillDate=null;
+    activeTab='calendar'; drillDate=null;
+    calendarSelectedDate = new Date(yearCursor,m,1);
+    const now=new Date(); if(now.getFullYear()===yearCursor && now.getMonth()===m) calendarSelectedDate=new Date(now);
+    calendarSelectedDate.setHours(0,0,0,0);
     render(); return;
   }
   if(t.matches('[data-year-nav]')){ yearCursor += parseInt(t.getAttribute('data-year-nav')); render(); return; }
   if(t.matches('[data-month-nav]')){
+    const oldDay=calendarSelectedDate.getDate();
     monthCursor = new Date(monthCursor.getFullYear(), monthCursor.getMonth()+parseInt(t.getAttribute('data-month-nav')), 1);
+    const lastDay=new Date(monthCursor.getFullYear(),monthCursor.getMonth()+1,0).getDate();
+    calendarSelectedDate=new Date(monthCursor.getFullYear(),monthCursor.getMonth(),Math.min(oldDay,lastDay));
     render(); return;
   }
   if(t.matches('[data-week-nav]')){
@@ -1160,6 +1246,7 @@ document.addEventListener('click', (e)=>{
     if(openCatAddId===id){ const inp=document.getElementById('cat-add-input-'+id); if(inp) inp.focus(); }
     return;
   }
+  if(t.matches('[data-cat-delete]')){ requestDeleteCategory(t.getAttribute('data-cat-delete')); return; }
   if(t.matches('[data-cat-rename]')){
     const id = t.getAttribute('data-cat-rename');
     scheduleAddOpen = false; openCatAddId = null;
@@ -1177,12 +1264,14 @@ document.addEventListener('click', (e)=>{
   }
   if(t.matches('[data-save-schedule]')){ saveSchedule(); return; }
   if(t.matches('[data-save-week-pool]')){ savePoolTask('week'); return; }
-  if(t.matches('[data-save-month-pool]')){ savePoolTask('month'); return; }
   if(t.matches('[data-repeat-dow]')){
     const d = parseInt(t.getAttribute('data-repeat-dow'));
     if(scheduleRepeatDaysSelected.has(d)){ scheduleRepeatDaysSelected.delete(d); t.classList.remove('on'); }
     else { scheduleRepeatDaysSelected.add(d); t.classList.add('on'); }
     return;
+  }
+  if(t.matches('[data-open-month-goal]')){
+    const [key,id]=t.getAttribute('data-open-month-goal').split('|'); openMonthGoalSheet(key,id); return;
   }
   if(t.matches('[data-goal-toggle]')){
     const [scope,key,id] = t.getAttribute('data-goal-toggle').split('|');
@@ -1300,6 +1389,26 @@ document.addEventListener('click', e=>{
   }
 }, true);
 
+let daySwipeStart=null;
+let suppressDaySwipeClickUntil=0;
+document.getElementById('view-container').addEventListener('touchstart',e=>{
+  if(activeTab!=='today' || drillDate || document.body.classList.contains('sheet-open') || e.touches.length!==1) return;
+  if(e.target.closest?.('input,textarea,button,.drag-handle,.routine-drag-handle,[contenteditable="true"]')) return;
+  const touch=e.touches[0]; daySwipeStart={x:touch.clientX,y:touch.clientY,time:Date.now()};
+},{passive:true});
+document.getElementById('view-container').addEventListener('touchend',e=>{
+  if(!daySwipeStart || activeTab!=='today' || drillDate){ daySwipeStart=null; return; }
+  const touch=e.changedTouches[0];
+  const dx=touch.clientX-daySwipeStart.x, dy=touch.clientY-daySwipeStart.y;
+  const elapsed=Date.now()-daySwipeStart.time; daySwipeStart=null;
+  if(elapsed>700 || Math.abs(dx)<55 || Math.abs(dx)<Math.abs(dy)*1.25) return;
+  suppressDaySwipeClickUntil=Date.now()+400;
+  shiftTodayDate(dx<0?1:-1);
+},{passive:true});
+document.addEventListener('click',e=>{
+  if(Date.now()<suppressDaySwipeClickUntil){ e.preventDefault(); e.stopImmediatePropagation(); }
+},true);
+
 function isImeEnter(e){ return e.isComposing || e.keyCode===229; }
 
 document.addEventListener('keydown', (e)=>{
@@ -1311,7 +1420,6 @@ document.addEventListener('keydown', (e)=>{
     const kind = parts[0];
     if(kind==='schedule') saveSchedule();
     else if(kind==='week-pool') savePoolTask('week');
-    else if(kind==='month-pool') savePoolTask('month');
     else if(kind==='cat') saveCatTask(parts[1]);
     else if(kind==='goal') addGoalFromInput(parts[1], parts[2]);
     else if(kind==='song') saveSong();
@@ -1344,7 +1452,7 @@ function saveCatTask(catId){
   if(!inp) return;
   const title = inp.value.trim();
   if(!title) return;
-  const viewDate = drillDate || new Date();
+  const viewDate = currentDayViewDate();
   state.tasks.push({ id:uid(), title, done:false, scope:'day', date:fmtDate(viewDate), time:null, categoryId:catId, memo:'', location:'', createdAt:Date.now(), sortOrder:nextTaskSortOrder() });
   scheduleSave(); render();
   const again = document.getElementById('cat-add-input-'+catId);
@@ -1362,22 +1470,21 @@ function saveSchedule(){
     state.recurringSchedules.push({ id:uid(), title, time, days:[...scheduleRepeatDaysSelected], memo:'', location:'' });
     showToast('반복 일정으로 등록했어');
   } else {
-    const viewDate = drillDate || new Date();
+    const viewDate = currentDayViewDate();
     state.tasks.push({ id:uid(), title, done:false, scope:'day', date:fmtDate(viewDate), time, categoryId:null, memo:'', location:'', createdAt:Date.now(), sortOrder:nextTaskSortOrder() });
   }
   scheduleAddOpen=false; scheduleRepeatDaysSelected=new Set();
   scheduleSave(); render();
 }
 function savePoolTask(scope){
-  const inp = document.getElementById(scope+'-pool-input');
+  if(scope!=='week') return;
+  const inp = document.getElementById('week-pool-input');
   if(!inp) return;
   const title = inp.value.trim();
   if(!title){ showToast('내용을 입력해줘'); return; }
-  const task = { id:uid(), title, done:false, categoryId:null, memo:'', location:'', createdAt:Date.now(), sortOrder:nextTaskSortOrder() };
-  if(scope==='week'){ task.scope='week'; task.weekKey = fmtDate(weekCursor); }
-  else { task.scope='month'; task.monthKey = monthKeyOf(monthCursor); }
-  state.tasks.push(task); scheduleSave(); render();
-  const again = document.getElementById(scope+'-pool-input'); if(again) again.focus();
+  state.tasks.push({ id:uid(), title, done:false, categoryId:null, memo:'', location:'', createdAt:Date.now(), sortOrder:nextTaskSortOrder(), scope:'week', weekKey:fmtDate(weekCursor) });
+  scheduleSave(); render();
+  const again = document.getElementById('week-pool-input'); if(again) again.focus();
 }
 function saveSong(){
   const inp = document.getElementById('song-input');
@@ -1520,12 +1627,12 @@ function openTaskDetailSheet(id){
 function openPoolItemSheet(id){
   const task = state.tasks.find(x=>x.id===id);
   if(!task) return;
-  const scopeLabel = task.scope==='week' ? '주' : '달';
+  const scopeLabel = '주';
   openSheet(`
     <div class="sheet-handle"></div>
     <div class="sheet-title">${escapeHtml(task.title)}</div>
     <div class="field-row"><div class="field-label">마감 일자 (선택)</div><input type="date" id="pi-date" value=""></div>
-    <div class="faint" style="margin:-6px 0 12px;">일자를 정하면 오늘 탭에 태스크로 등록되고, 비워두면 계속 이번 ${scopeLabel} 할 일로 남아있어</div>
+    <div class="faint" style="margin:-6px 0 12px;">일자를 정하면 해당 날짜의 태스크로 등록되고, 비워두면 계속 이번 ${scopeLabel} 할 일로 남아있어</div>
     <div class="field-row">
       <div class="field-label">카테고리</div>
       <div class="chip-row-wrap" id="pi-cat-row">
@@ -1555,7 +1662,7 @@ function openPoolItemSheet(id){
     task.categoryId = selectedCat || null;
     if(dateVal){
       task.scope='day'; task.date=dateVal; task.weekKey=null; task.monthKey=null; task.sortOrder=nextTaskSortOrder();
-      showToast('오늘 탭에 태스크로 등록했어');
+      showToast('해당 날짜의 태스크로 등록했어');
     } else {
       showToast('저장했어');
     }
@@ -1653,6 +1760,47 @@ function openMoodSheet(dateStr){
     if(!selected && !diary){ delete state.moods[dateStr]; }
     else { state.moods[dateStr] = { emoji:selected||'😊', diary }; }
     scheduleSave(); closeSheet(); render();
+  };
+}
+
+function requestDeleteCategory(id){
+  const cat=catById(id); if(!cat) return;
+  const count=state.tasks.filter(task=>task.categoryId===id).length;
+  const msg=count
+    ? `‘${cat.name}’ 카테고리를 삭제하고, 안의 할 일 ${count}개는 미분류로 옮길까?`
+    : `‘${cat.name}’ 카테고리를 삭제할까?`;
+  openConfirmSheet(msg,()=>{
+    state.categories=state.categories.filter(c=>c.id!==id);
+    state.tasks.forEach(task=>{ if(task.categoryId===id) task.categoryId=null; });
+    Object.values(state.monthGoalItems||{}).forEach(items=>{ (items||[]).forEach(item=>{ if(item.categoryId===id) item.categoryId=null; }); });
+    openCatAddId=null; renamingCatId=null;
+    scheduleSave(); render(); showToast(count?'할 일은 미분류로 옮겼어':'카테고리를 삭제했어');
+  });
+}
+
+function openMonthGoalSheet(monthKey,id){
+  const item=goalItemsFor('month',monthKey).find(x=>x.id===id); if(!item) return;
+  const [year,month]=monthKey.split('-').map(Number);
+  const min=`${monthKey}-01`;
+  const max=fmtDate(new Date(year,month,0));
+  openSheet(`<div class="sheet-handle"></div><div class="sheet-title">월간 목표 수정</div>
+    <div class="field-row"><div class="field-label">목표</div><input type="text" id="mg-title" value="${escapeHtml(item.text)}"></div>
+    <div class="field-row"><div class="field-label">마감일 (선택)</div><input type="date" id="mg-date" min="${min}" max="${max}" value="${item.dueDate||''}"></div>
+    <div class="faint" style="margin:-5px 0 13px;">마감일을 정해도 일일 태스크로 이동하지 않고, 목표 옆에 날짜만 표시돼.</div>
+    <div class="sheet-actions"><button class="btn btn-danger" id="mg-delete">삭제</button><button class="btn btn-primary" id="mg-save">저장</button></div>`);
+  document.getElementById('mg-save').onclick=()=>{
+    const text=document.getElementById('mg-title').value.trim();
+    const dueDate=document.getElementById('mg-date').value;
+    if(!text){showToast('목표를 입력해줘');return;}
+    if(dueDate && !dueDate.startsWith(monthKey+'-')){showToast('이 달 안의 날짜를 골라줘');return;}
+    item.text=text; item.dueDate=dueDate;
+    scheduleSave(); closeSheet(); render(); showToast('월간 목표를 저장했어');
+  };
+  document.getElementById('mg-delete').onclick=()=>{
+    openConfirmSheet('이 월간 목표를 삭제할까?',()=>{
+      const arr=goalItemsFor('month',monthKey); const i=arr.findIndex(x=>x.id===id); if(i>-1)arr.splice(i,1);
+      scheduleSave(); render();
+    });
   };
 }
 
