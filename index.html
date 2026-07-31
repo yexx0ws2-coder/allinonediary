@@ -108,6 +108,13 @@ body{ margin:0; padding:0; width:100%; min-height:100vh; min-height:100dvh; colo
 
 .routine-card{ background:var(--bg-deep); border:1px dashed var(--ink-faint); border-radius:14px; padding:10px 13px 4px; }
 .routine-row{ display:flex; align-items:center; gap:9px; padding:7px 0; }
+.routine-manage-list{ display:flex; flex-direction:column; gap:7px; }
+.routine-manage-item{ display:flex; align-items:center; gap:8px; padding:10px 11px; background:var(--card); border:1px solid var(--line); border-radius:12px; }
+.routine-manage-item.dragging{ opacity:.72; transform:scale(1.01); box-shadow:0 8px 18px rgba(0,0,0,.10); }
+.routine-manage-main{ flex:1; min-width:0; }
+.routine-manage-title{ font-size:13px; font-weight:700; overflow-wrap:anywhere; }
+.routine-drag-handle{ color:var(--ink-faint); cursor:grab; touch-action:none; user-select:none; font-size:17px; line-height:1; padding:6px 3px; }
+.routine-drag-handle:active{ cursor:grabbing; }
 .icon-btn-plain{ background:none;border:none;font-size:14px;color:var(--ink-faint);cursor:pointer;padding:2px 4px;}
 
 .summary-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
@@ -291,6 +298,7 @@ function defaultState(){
     routines: [],
     routineCompletions: {},
     recurringSchedules: [],
+    recurringScheduleExceptions: {},
     yearGoalItems: {},
     monthGoalItems: {},
     moods: {},
@@ -329,6 +337,12 @@ function normalizeState(parsed){
   merged.profile = Object.assign(defaultState().profile, parsed?.profile || {});
   merged.settings = Object.assign(defaultState().settings, parsed?.settings || {});
   merged.tasks = Array.isArray(merged.tasks) ? merged.tasks : [];
+  merged.routines = Array.isArray(merged.routines) ? merged.routines : [];
+  merged.recurringSchedules = Array.isArray(merged.recurringSchedules) ? merged.recurringSchedules : [];
+  merged.recurringScheduleExceptions = (merged.recurringScheduleExceptions && typeof merged.recurringScheduleExceptions==='object') ? merged.recurringScheduleExceptions : {};
+  merged.routines.forEach((routine,index)=>{
+    routine.sortOrder = Number.isFinite(Number(routine.sortOrder)) ? Number(routine.sortOrder) : (index+1)*1000;
+  });
   /* 기존 데이터에도 안정적인 수동 정렬값을 부여 */
   merged.tasks.forEach((task, index)=>{
     if(!Number.isFinite(Number(task.sortOrder))){
@@ -634,7 +648,7 @@ function nextTaskSortOrder(){
   const max = state.tasks.reduce((m,t)=>Math.max(m, taskSortValue(t)), 0);
   return max + 1000;
 }
-function routinesForDate(d){ const dow=d.getDay(); return state.routines.filter(r=>r.days.includes(dow)); }
+function routinesForDate(d){ const dow=d.getDay(); return state.routines.filter(r=>r.days.includes(dow)).sort((a,b)=>(Number(a.sortOrder)||0)-(Number(b.sortOrder)||0)); }
 function isRoutineDone(rid,dateStr){ return !!state.routineCompletions[rid+'|'+dateStr]; }
 function dayDotColors(dateStr){
   return tasksForDate(dateStr).filter(t=>!t.time).map(t=>{
@@ -644,9 +658,13 @@ function dayDotColors(dateStr){
 }
 function scheduleForDate(date){
   const dStr = fmtDate(date);
-  const oneoff = tasksForDate(dStr).filter(t=>t.time).map(t=>({id:t.id, title:t.title, time:t.time, kind:'oneoff'}));
+  const oneoff = tasksForDate(dStr).filter(t=>t.time).map(t=>({id:t.id, title:t.title, time:t.time, kind:'oneoff', date:dStr}));
   const dow = date.getDay();
-  const recurring = state.recurringSchedules.filter(r=>r.days.includes(dow)).map(r=>({id:r.id, title:r.title, time:r.time, kind:'recurring'}));
+  const recurring = state.recurringSchedules.filter(r=>r.days.includes(dow)).map(r=>{
+    const ex = state.recurringScheduleExceptions?.[r.id+'|'+dStr] || {};
+    if(ex.cancelled) return null;
+    return {id:r.id, title:ex.title ?? r.title, time:ex.time ?? r.time, kind:'recurring', date:dStr, hasException:Object.keys(ex).length>0};
+  }).filter(Boolean);
   return [...oneoff, ...recurring].sort((a,b)=>a.time.localeCompare(b.time));
 }
 function goalItemsFor(scope,key){
@@ -744,9 +762,9 @@ function renderDayView(date, isHome){
   let scheduleItems = schedule.map(s=>`
     <div class="schedule-row">
       <span class="time-pill mono">${s.time}</span>
-      <span class="schedule-title" data-open-detail="${s.kind==='recurring'?'recur:'+s.id:s.id}">${escapeHtml(s.title)}${s.kind==='recurring'?' <span class="repeat-tag">🔁</span>':''}</span>
+      <span class="schedule-title" data-open-detail="${s.kind==='recurring'?'recur:'+s.id:s.id}">${escapeHtml(s.title)}${s.kind==='recurring' ? `<span class="repeat-tag"> 🔁${s.hasException?'·':''}</span>` : ''}</span>
       <div class="row-actions">
-        ${s.kind==='oneoff' ? `<button data-open-move="${s.id}">→</button><button data-delete-task="${s.id}">✕</button>` : `<button data-edit-recurring="${s.id}">⚙</button>`}
+        ${s.kind==='oneoff' ? `<button data-open-move="${s.id}">→</button><button data-delete-task="${s.id}">✕</button>` : `<button data-edit-recurring="${s.id}" data-recurring-date="${s.date}">⚙</button>`}
       </div>
     </div>
   `).join('');
@@ -1122,7 +1140,7 @@ document.addEventListener('click', (e)=>{
     return;
   }
   if(t.matches('[data-open-move]')){ openMoveSheet(t.getAttribute('data-open-move')); return; }
-  if(t.matches('[data-edit-recurring]')){ openRecurringEditSheet(t.getAttribute('data-edit-recurring')); return; }
+  if(t.matches('[data-edit-recurring]')){ openRecurringEditSheet(t.getAttribute('data-edit-recurring'), t.getAttribute('data-recurring-date')); return; }
   if(t.matches('[data-open-detail]')){
     const val = t.getAttribute('data-open-detail');
     if(val.startsWith('recur:')) openRecurringEditSheet(val.slice(6));
@@ -1548,40 +1566,60 @@ function openPoolItemSheet(id){
   };
 }
 
-function openRecurringEditSheet(id){
+function openRecurringEditSheet(id, dateStr){
   const r = state.recurringSchedules.find(x=>x.id===id);
   if(!r) return;
+  const key = dateStr ? id+'|'+dateStr : null;
+  const ex = key ? (state.recurringScheduleExceptions[key] || {}) : {};
+  const shownTime = ex.time ?? r.time;
+  const shownTitle = ex.title ?? r.title;
   openSheet(`
     <div class="sheet-handle"></div>
     <div class="sheet-title">🔁 반복 일정</div>
-    <div class="field-row"><div class="field-label">시간</div><input type="time" id="rs-time" value="${r.time}"></div>
-    <div class="field-row"><div class="field-label">이름</div><input type="text" id="rs-title" value="${escapeHtml(r.title)}"></div>
+    ${dateStr ? `<div class="faint" style="margin:-5px 0 12px;">${dateStr} 일정</div>` : ''}
+    <div class="field-row"><div class="field-label">시간</div><input type="time" id="rs-time" value="${shownTime}"></div>
+    <div class="field-row"><div class="field-label">이름</div><input type="text" id="rs-title" value="${escapeHtml(shownTitle)}"></div>
     <div class="field-row">
       <div class="field-label">반복 요일</div>
       <div class="dow-row" id="rs-days">${DOW_KR.map((d,i)=>`<button type="button" class="dow-btn ${r.days.includes(i)?'on':''}" data-dow="${i}">${d}</button>`).join('')}</div>
     </div>
     <div class="field-row"><div class="field-label">장소</div><input type="text" id="rs-location" value="${escapeHtml(r.location||'')}"></div>
     <div class="field-row"><div class="field-label">메모</div><textarea id="rs-memo">${escapeHtml(r.memo||'')}</textarea></div>
-    <div class="sheet-actions">
-      <button class="btn btn-danger" id="rs-delete">삭제</button>
-      <button class="btn btn-primary" id="rs-save">저장</button>
+    <div class="sheet-actions" style="flex-wrap:wrap;">
+      <button class="btn btn-danger" id="rs-delete">전체 삭제</button>
+      ${dateStr ? `<button class="btn btn-ghost" id="rs-save-once">이 날만 저장</button>` : ''}
+      <button class="btn btn-primary" id="rs-save-all">전체 저장</button>
     </div>
   `);
   const selDays = new Set(r.days);
   document.querySelectorAll('#rs-days .dow-btn').forEach(btn=>{
     btn.onclick = ()=>{ const d=parseInt(btn.getAttribute('data-dow')); if(selDays.has(d)){selDays.delete(d);btn.classList.remove('on');} else {selDays.add(d);btn.classList.add('on');} };
   });
-  document.getElementById('rs-save').onclick = ()=>{
+  if(dateStr){
+    document.getElementById('rs-save-once').onclick = ()=>{
+      const time = document.getElementById('rs-time').value || r.time;
+      const title = document.getElementById('rs-title').value.trim() || r.title;
+      const next = {};
+      if(time!==r.time) next.time=time;
+      if(title!==r.title) next.title=title;
+      if(Object.keys(next).length) state.recurringScheduleExceptions[key]=next;
+      else delete state.recurringScheduleExceptions[key];
+      scheduleSave(); closeSheet(); render(); showToast('이 날 일정만 바꿨어');
+    };
+  }
+  document.getElementById('rs-save-all').onclick = ()=>{
     const newTime = document.getElementById('rs-time').value; if(newTime) r.time = newTime;
     const newTitle = document.getElementById('rs-title').value.trim(); if(newTitle) r.title = newTitle;
     r.location = document.getElementById('rs-location').value.trim();
     r.memo = document.getElementById('rs-memo').value.trim();
     r.days = [...selDays];
-    scheduleSave(); closeSheet(); render(); showToast('저장했어');
+    if(key) delete state.recurringScheduleExceptions[key];
+    scheduleSave(); closeSheet(); render(); showToast('반복 일정 전체를 바꿨어');
   };
   document.getElementById('rs-delete').onclick = ()=>{
-    openConfirmSheet('이 반복 일정을 삭제할까?', ()=>{
+    openConfirmSheet('이 반복 일정을 전체 삭제할까?', ()=>{
       state.recurringSchedules = state.recurringSchedules.filter(x=>x.id!==id);
+      Object.keys(state.recurringScheduleExceptions).forEach(k=>{ if(k.startsWith(id+'|')) delete state.recurringScheduleExceptions[k]; });
       scheduleSave(); render();
     });
   };
@@ -1649,18 +1687,21 @@ function openCategorySheet(){
 
 function openRoutineSheet(){ renderRoutineSheet(); }
 function renderRoutineSheet(){
-  const items = state.routines.map(r=>{
+  const ordered = [...state.routines].sort((a,b)=>(Number(a.sortOrder)||0)-(Number(b.sortOrder)||0));
+  const items = ordered.map(r=>{
     const days = DOW_KR.map((d,i)=>`<span style="font-size:9px;padding:2px 5px;border-radius:8px;margin-right:2px;background:${r.days.includes(i)?'var(--primary)':'var(--bg-deep)'};color:${r.days.includes(i)?'#fff':'var(--ink-faint)'};">${d}</span>`).join('');
     const periodLabel = {morning:'🌅',afternoon:'☀️',evening:'🌙'}[r.period||'morning'];
-    return `<div class="mini-list-item">
-      <div><div>${periodLabel} ${escapeHtml(r.title)}</div><div style="margin-top:4px;">${days}</div></div>
+    return `<div class="routine-manage-item" data-routine-id="${r.id}">
+      <span class="routine-drag-handle" aria-label="순서 변경">⠿</span>
+      <div class="routine-manage-main"><div class="routine-manage-title">${periodLabel} ${escapeHtml(r.title)}</div><div style="margin-top:4px;">${days}</div></div>
+      <button class="icon-btn-plain" data-edit-routine="${r.id}">✎</button>
       <button class="icon-btn-plain" data-del-routine="${r.id}">✕</button>
     </div>`;
   }).join('') || `<div class="pool-empty">등록된 루틴이 없어</div>`;
   openSheet(`
     <div class="sheet-handle"></div>
     <div class="sheet-title">루틴 관리</div>
-    <div style="margin-bottom:14px;">${items}</div>
+    <div class="routine-manage-list" id="routine-manage-list" style="margin-bottom:14px;">${items}</div>
     <div class="field-row"><input type="text" id="new-rt-title" placeholder="새 루틴 이름"></div>
     <div class="field-row">
       <div class="field-label">시간대</div>
@@ -1671,36 +1712,48 @@ function renderRoutineSheet(){
       </div>
     </div>
     <div class="dow-row" id="new-rt-days">${DOW_KR.map((d,i)=>`<button type="button" class="dow-btn" data-dow="${i}">${d}</button>`).join('')}</div>
-    <div class="sheet-actions">
-      <button class="btn btn-ghost" id="rt-close">닫기</button>
-      <button class="btn btn-primary" id="rt-add">추가</button>
-    </div>
+    <div class="sheet-actions"><button class="btn btn-ghost" id="rt-close">닫기</button><button class="btn btn-primary" id="rt-add">추가</button></div>
   `);
   let selPeriod = 'morning';
-  document.querySelectorAll('#new-rt-period .seg-btn').forEach(btn=>{
-    btn.onclick = ()=>{ selPeriod = btn.getAttribute('data-period'); document.querySelectorAll('#new-rt-period .seg-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); };
-  });
+  document.querySelectorAll('#new-rt-period .seg-btn').forEach(btn=>{ btn.onclick=()=>{ selPeriod=btn.dataset.period; document.querySelectorAll('#new-rt-period .seg-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }; });
   const selDays = new Set();
-  document.querySelectorAll('#new-rt-days .dow-btn').forEach(btn=>{
-    btn.onclick = ()=>{ const d=parseInt(btn.getAttribute('data-dow')); if(selDays.has(d)){selDays.delete(d);btn.classList.remove('on');} else {selDays.add(d);btn.classList.add('on');} };
-  });
+  document.querySelectorAll('#new-rt-days .dow-btn').forEach(btn=>{ btn.onclick=()=>{ const d=Number(btn.dataset.dow); if(selDays.has(d)){selDays.delete(d);btn.classList.remove('on')}else{selDays.add(d);btn.classList.add('on')} }; });
   document.getElementById('rt-close').onclick = closeSheet;
   document.getElementById('rt-add').onclick = ()=>{
-    const title = document.getElementById('new-rt-title').value.trim();
-    if(!title){ showToast('이름을 입력해줘'); return; }
-    if(selDays.size===0){ showToast('요일을 선택해줘'); return; }
-    state.routines.push({ id:uid(), title, days:[...selDays], period:selPeriod });
+    const title=document.getElementById('new-rt-title').value.trim();
+    if(!title){showToast('이름을 입력해줘');return} if(!selDays.size){showToast('요일을 선택해줘');return}
+    const max=state.routines.reduce((m,x)=>Math.max(m,Number(x.sortOrder)||0),0);
+    state.routines.push({id:uid(),title,days:[...selDays],period:selPeriod,sortOrder:max+1000});
     scheduleSave(); renderRoutineSheet(); render();
   };
-  document.querySelectorAll('[data-del-routine]').forEach(btn=>{
-    btn.onclick = ()=>{
-      const id = btn.getAttribute('data-del-routine');
-      openConfirmSheet('이 루틴을 삭제할까?', ()=>{
-        state.routines = state.routines.filter(r=>r.id!==id);
-        Object.keys(state.routineCompletions).forEach(k=>{ if(k.startsWith(id+'|')) delete state.routineCompletions[k]; });
-        scheduleSave(); renderRoutineSheet(); render();
-      });
-    };
+  document.querySelectorAll('[data-edit-routine]').forEach(btn=>{ btn.onclick=()=>openRoutineEditSheet(btn.dataset.editRoutine); });
+  document.querySelectorAll('[data-del-routine]').forEach(btn=>{ btn.onclick=()=>{ const id=btn.dataset.delRoutine; openConfirmSheet('이 루틴을 삭제할까?',()=>{ state.routines=state.routines.filter(r=>r.id!==id); Object.keys(state.routineCompletions).forEach(k=>{if(k.startsWith(id+'|'))delete state.routineCompletions[k]}); scheduleSave(); renderRoutineSheet(); render(); }); }; });
+  enableRoutineManagerDrag();
+}
+
+function openRoutineEditSheet(id){
+  const r=state.routines.find(x=>x.id===id); if(!r)return;
+  openSheet(`
+    <div class="sheet-handle"></div><div class="sheet-title">루틴 수정</div>
+    <div class="field-row"><div class="field-label">이름</div><input id="edit-rt-title" value="${escapeHtml(r.title)}"></div>
+    <div class="field-row"><div class="field-label">시간대</div><div class="seg-toggle" id="edit-rt-period">${PERIODS.map(([k,l])=>`<button type="button" class="seg-btn ${(r.period||'morning')===k?'active':''}" data-period="${k}">${l}</button>`).join('')}</div></div>
+    <div class="field-row"><div class="field-label">요일</div><div class="dow-row" id="edit-rt-days">${DOW_KR.map((d,i)=>`<button type="button" class="dow-btn ${r.days.includes(i)?'on':''}" data-dow="${i}">${d}</button>`).join('')}</div></div>
+    <div class="sheet-actions"><button class="btn btn-ghost" id="edit-rt-cancel">취소</button><button class="btn btn-primary" id="edit-rt-save">저장</button></div>`);
+  let period=r.period||'morning'; const days=new Set(r.days);
+  document.querySelectorAll('#edit-rt-period .seg-btn').forEach(b=>b.onclick=()=>{period=b.dataset.period;document.querySelectorAll('#edit-rt-period .seg-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active')});
+  document.querySelectorAll('#edit-rt-days .dow-btn').forEach(b=>b.onclick=()=>{const d=Number(b.dataset.dow);if(days.has(d)){days.delete(d);b.classList.remove('on')}else{days.add(d);b.classList.add('on')}});
+  document.getElementById('edit-rt-cancel').onclick=()=>renderRoutineSheet();
+  document.getElementById('edit-rt-save').onclick=()=>{const title=document.getElementById('edit-rt-title').value.trim();if(!title){showToast('이름을 입력해줘');return}if(!days.size){showToast('요일을 선택해줘');return}r.title=title;r.period=period;r.days=[...days];scheduleSave();renderRoutineSheet();render();showToast('루틴을 수정했어')};
+}
+
+function enableRoutineManagerDrag(){
+  const list=document.getElementById('routine-manage-list'); if(!list)return;
+  let drag=null;
+  list.querySelectorAll('.routine-drag-handle').forEach(handle=>{
+    handle.onpointerdown=e=>{if(e.button>0)return;const row=handle.closest('.routine-manage-item');drag={row,handle,pointerId:e.pointerId,startY:e.clientY,started:false};try{handle.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault()};
+    handle.onpointermove=e=>{if(!drag||e.pointerId!==drag.pointerId)return;if(!drag.started&&Math.abs(e.clientY-drag.startY)<5)return;drag.started=true;drag.row.classList.add('dragging');const under=document.elementFromPoint(e.clientX,e.clientY)?.closest?.('.routine-manage-item');if(!under||under===drag.row||under.parentElement!==list)return;const rect=under.getBoundingClientRect();list.insertBefore(drag.row,e.clientY<rect.top+rect.height/2?under:under.nextSibling);e.preventDefault()};
+    const finish=e=>{if(!drag||e.pointerId!==drag.pointerId)return;drag.row.classList.remove('dragging');if(drag.started){[...list.querySelectorAll('.routine-manage-item')].forEach((el,i)=>{const r=state.routines.find(x=>x.id===el.dataset.routineId);if(r)r.sortOrder=(i+1)*1000});scheduleSave();renderRoutineSheet();render()}drag=null};
+    handle.onpointerup=finish; handle.onpointercancel=finish;
   });
 }
 
