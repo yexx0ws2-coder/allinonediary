@@ -41,6 +41,22 @@
   --shadow-soft:0 2px 10px rgba(104,84,69,0.10);
   --sched-accent:#A58A73; --sched-tint:#F4EEE5;
 }
+:root[data-theme="bluelemon"]{
+  --bg:#F8FBFF; --bg-deep:#EAF3FC; --card:#FFFDF5;
+  --ink:#33424E; --ink-soft:#788B99; --ink-faint:#C3D1DB;
+  --line:#E7E9C8;
+  --primary:#82ADDA; --primary-deep:#5684B2; --primary-tint:#FFF6BF;
+  --shadow-soft:0 2px 10px rgba(105,145,185,0.10);
+  --sched-accent:#6F9BC8; --sched-tint:#EDF5FD;
+}
+:root[data-theme="purple"]{
+  --bg:#FAF8FD; --bg-deep:#F0EAF7; --card:#FFFFFF;
+  --ink:#44384F; --ink-soft:#8B7A99; --ink-faint:#D0C3DB;
+  --line:#EAE1F1;
+  --primary:#AE8AC8; --primary-deep:#835FA1; --primary-tint:#F1E7F8;
+  --shadow-soft:0 2px 10px rgba(135,100,160,0.10);
+  --sched-accent:#9672B2; --sched-tint:#F4EDF9;
+}
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html{ margin:0; padding:0; width:100%; min-height:100%; background:var(--bg-deep); overflow-x:hidden; }
 body{ margin:0; padding:0; width:100%; min-height:100vh; min-height:100dvh; color:var(--ink); word-break:keep-all; overflow-x:hidden; overscroll-behavior-y:auto; -webkit-overflow-scrolling:touch; }
@@ -212,7 +228,7 @@ body{ margin:0; padding:0; width:100%; min-height:100vh; min-height:100dvh; colo
 .avatar-pick-row{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:18px;}
 .avatar-opt{ width:34px;height:34px;border-radius:50%; background:var(--card); border:1.5px solid var(--line); font-size:16px; cursor:pointer; display:flex;align-items:center;justify-content:center;}
 .avatar-opt.selected{ border-color:var(--primary); background:var(--primary-tint); }
-.theme-row{ display:flex; gap:10px; justify-content:center; margin-bottom:8px; }
+.theme-row{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:8px; }
 .theme-opt{ width:44px;height:44px;border-radius:50%; cursor:pointer; border:2px solid transparent; }
 .theme-opt.selected{ border-color:var(--ink); }
 .playlist-row{ display:flex; align-items:flex-start; gap:10px; background:var(--card); border-radius:12px; padding:11px 12px; margin-bottom:7px; box-shadow:var(--shadow-soft);}
@@ -334,7 +350,7 @@ const MONTH_NAMES = ['1월','2월','3월','4월','5월','6월','7월','8월','9�
 const SWATCHES = ['#E7ABB2','#DDC9A3','#A9BFA0','#9FB6C4','#B39AB0','#DCC08A'];
 const MOOD_EMOJIS = ['😊','🥰','😌','😐','😔','😢','😤','😡','😴','🥳','😎','🤔','😭','✨','💪','🤒'];
 const AVATAR_EMOJIS = ['🙂','😺','🐶','🐰','🦊','🐻','🐼','🌸','⭐','🍀','🐨','🐹'];
-const THEMES = [ {id:'pink', color:'#DD8F98', label:'핑크'}, {id:'blue', color:'#8FB3DD', label:'블루'}, {id:'green', color:'#93C0A4', label:'그린'}, {id:'soymilk', color:'#A88F7A', label:'소이밀크'} ];
+const THEMES = [ {id:'pink', color:'#DD8F98', label:'핑크'}, {id:'blue', color:'#8FB3DD', label:'블루'}, {id:'green', color:'#93C0A4', label:'그린'}, {id:'soymilk', color:'#A88F7A', label:'소이밀크'}, {id:'bluelemon', color:'linear-gradient(135deg,#82ADDA 0 50%,#FFF2A8 50% 100%)', label:'블루 레몬'}, {id:'purple', color:'#AE8AC8', label:'퍼플'} ];
 const PERIODS = [['morning','🌅 아침'],['afternoon','☀️ 낮'],['evening','🌙 밤']];
 
 function defaultState(){
@@ -786,6 +802,18 @@ function calendarDotColors(dateStr){
   return colors;
 }
 
+function shiftCalendarMonth(step){
+  const oldDay=calendarSelectedDate.getDate();
+  monthCursor = new Date(monthCursor.getFullYear(), monthCursor.getMonth()+step, 1);
+  const lastDay=new Date(monthCursor.getFullYear(),monthCursor.getMonth()+1,0).getDate();
+  calendarSelectedDate=new Date(monthCursor.getFullYear(),monthCursor.getMonth(),Math.min(oldDay,lastDay));
+  resetInlineStates(); render();
+}
+function shiftWeekCursor(step){
+  weekCursor = addDays(weekCursor, step*7);
+  resetInlineStates(); render();
+}
+
 
 /* ================= 렌더 ================= */
 function render(){
@@ -1225,17 +1253,8 @@ document.addEventListener('click', (e)=>{
     render(); return;
   }
   if(t.matches('[data-year-nav]')){ yearCursor += parseInt(t.getAttribute('data-year-nav')); render(); return; }
-  if(t.matches('[data-month-nav]')){
-    const oldDay=calendarSelectedDate.getDate();
-    monthCursor = new Date(monthCursor.getFullYear(), monthCursor.getMonth()+parseInt(t.getAttribute('data-month-nav')), 1);
-    const lastDay=new Date(monthCursor.getFullYear(),monthCursor.getMonth()+1,0).getDate();
-    calendarSelectedDate=new Date(monthCursor.getFullYear(),monthCursor.getMonth(),Math.min(oldDay,lastDay));
-    render(); return;
-  }
-  if(t.matches('[data-week-nav]')){
-    weekCursor = addDays(weekCursor, parseInt(t.getAttribute('data-week-nav'))*7);
-    render(); return;
-  }
+  if(t.matches('[data-month-nav]')){ shiftCalendarMonth(parseInt(t.getAttribute('data-month-nav'))); return; }
+  if(t.matches('[data-week-nav]')){ shiftWeekCursor(parseInt(t.getAttribute('data-week-nav'))); return; }
   if(t.matches('[data-toggle-task]')){
     const task = state.tasks.find(x=>x.id===t.getAttribute('data-toggle-task'));
     if(task){ task.done=!task.done; scheduleSave(); render(); }
@@ -1436,6 +1455,31 @@ document.addEventListener('click',e=>{
   if(Date.now()<suppressDaySwipeClickUntil){ e.preventDefault(); e.stopImmediatePropagation(); }
 },true);
 
+let periodSwipeStart=null;
+let suppressPeriodSwipeClickUntil=0;
+document.getElementById('view-container').addEventListener('touchstart',e=>{
+  if(!['week','calendar'].includes(activeTab) || drillDate || document.body.classList.contains('sheet-open') || e.touches.length!==1) return;
+  if(e.target.closest?.('input,textarea,button,.drag-handle,.routine-drag-handle,[contenteditable="true"]')) return;
+  const touch=e.touches[0];
+  periodSwipeStart={x:touch.clientX,y:touch.clientY,time:Date.now(),tab:activeTab};
+},{passive:true});
+document.getElementById('view-container').addEventListener('touchend',e=>{
+  if(!periodSwipeStart || drillDate || activeTab!==periodSwipeStart.tab){ periodSwipeStart=null; return; }
+  const touch=e.changedTouches[0];
+  const dx=touch.clientX-periodSwipeStart.x, dy=touch.clientY-periodSwipeStart.y;
+  const elapsed=Date.now()-periodSwipeStart.time;
+  const tab=periodSwipeStart.tab;
+  periodSwipeStart=null;
+  if(elapsed>700 || Math.abs(dx)<55 || Math.abs(dx)<Math.abs(dy)*1.25) return;
+  suppressPeriodSwipeClickUntil=Date.now()+400;
+  const step=dx<0?1:-1;
+  if(tab==='week') shiftWeekCursor(step);
+  else shiftCalendarMonth(step);
+},{passive:true});
+document.addEventListener('click',e=>{
+  if(Date.now()<suppressPeriodSwipeClickUntil){ e.preventDefault(); e.stopImmediatePropagation(); }
+},true);
+
 function isImeEnter(e){ return e.isComposing || e.keyCode===229; }
 
 document.addEventListener('keydown', (e)=>{
@@ -1602,6 +1646,7 @@ function openMoveSheet(id){
   };
 }
 function applyTaskDate(task, dateStr){
+  if(task.scope==='week' && task.weekKey) task.sourceWeekKey = task.weekKey;
   task.scope='day'; task.date=dateStr; task.weekKey=null; task.monthKey=null; task.sortOrder=nextTaskSortOrder();
   scheduleSave(); closeSheet(); render(); showToast('옮겼어');
 }
@@ -1610,9 +1655,13 @@ function openTaskDetailSheet(id){
   const task = state.tasks.find(x=>x.id===id);
   if(!task) return;
   const isSchedule = !!task.time;
+  const canMoveToWeek = task.scope==='day' && !isSchedule;
+  const targetWeekKey = task.sourceWeekKey || (task.date ? weekKeyOf(parseDate(task.date)) : fmtDate(weekCursor));
   openSheet(`
     <div class="sheet-handle"></div>
-    <div class="sheet-title">${escapeHtml(task.title)}</div>
+    <div class="sheet-title">할 일 수정</div>
+    <div class="field-row"><div class="field-label">이름</div><input type="text" id="d-title" value="${escapeHtml(task.title)}" placeholder="할 일 이름"></div>
+    ${task.scope==='day' ? `<div class="field-row"><div class="field-label">날짜</div><input type="date" id="d-date" value="${escapeHtml(task.date||'')}"></div>` : ''}
     ${isSchedule ? `<div class="field-row"><div class="field-label">시간</div><input type="time" id="d-time" value="${task.time}"></div>` : `
       <div class="field-row">
         <div class="field-label">카테고리</div>
@@ -1624,6 +1673,7 @@ function openTaskDetailSheet(id){
     `}
     <div class="field-row"><div class="field-label">장소</div><input type="text" id="d-location" placeholder="장소 (선택)" value="${escapeHtml(task.location||'')}"></div>
     <div class="field-row"><div class="field-label">메모</div><textarea id="d-memo" placeholder="메모를 남겨봐">${escapeHtml(task.memo||'')}</textarea></div>
+    ${canMoveToWeek ? `<button class="btn btn-ghost" id="d-back-week" style="width:100%;margin-bottom:8px;">${task.sourceWeekKey?'주간으로 되돌리기':'이 주 할 일로 옮기기'}</button>` : ''}
     <div class="sheet-actions">
       <button class="btn btn-danger" id="d-delete">삭제</button>
       <button class="btn btn-primary" id="d-save">저장</button>
@@ -1639,10 +1689,28 @@ function openTaskDetailSheet(id){
       };
     });
   }
+  const backWeekBtn=document.getElementById('d-back-week');
+  if(backWeekBtn){
+    backWeekBtn.onclick=()=>{
+      const title=document.getElementById('d-title').value.trim();
+      if(!title){ showToast('이름을 입력해줘'); return; }
+      task.title=title;
+      task.location=document.getElementById('d-location').value.trim();
+      task.memo=document.getElementById('d-memo').value.trim();
+      task.categoryId=selectedCat || null;
+      task.scope='week'; task.weekKey=targetWeekKey; task.date=null; task.monthKey=null; task.time=null; task.sortOrder=nextTaskSortOrder();
+      delete task.sourceWeekKey;
+      scheduleSave(); closeSheet(); render(); showToast('주간 할 일로 옮겼어');
+    };
+  }
   document.getElementById('d-save').onclick = ()=>{
+    const title=document.getElementById('d-title').value.trim();
+    if(!title){ showToast('이름을 입력해줘'); return; }
+    task.title = title;
     task.location = document.getElementById('d-location').value.trim();
     task.memo = document.getElementById('d-memo').value.trim();
     const ti = document.getElementById('d-time'); if(ti) task.time = ti.value;
+    const di = document.getElementById('d-date'); if(di && di.value) task.date = di.value;
     if(!isSchedule) task.categoryId = selectedCat || null;
     scheduleSave(); closeSheet(); render(); showToast('저장했어');
   };
@@ -1654,12 +1722,12 @@ function openTaskDetailSheet(id){
 function openPoolItemSheet(id){
   const task = state.tasks.find(x=>x.id===id);
   if(!task) return;
-  const scopeLabel = '주';
   openSheet(`
     <div class="sheet-handle"></div>
-    <div class="sheet-title">${escapeHtml(task.title)}</div>
+    <div class="sheet-title">주간 할 일 수정</div>
+    <div class="field-row"><div class="field-label">이름</div><input type="text" id="pi-title" value="${escapeHtml(task.title)}" placeholder="할 일 이름"></div>
     <div class="field-row"><div class="field-label">마감 일자 (선택)</div><input type="date" id="pi-date" value=""></div>
-    <div class="faint" style="margin:-6px 0 12px;">일자를 정하면 해당 날짜의 태스크로 등록되고, 비워두면 계속 이번 ${scopeLabel} 할 일로 남아있어</div>
+    <div class="faint" style="margin:-6px 0 12px;">날짜를 정하면 그날의 할 일로 옮겨져. 다시 주간으로 되돌리는 것도 가능해.</div>
     <div class="field-row">
       <div class="field-label">카테고리</div>
       <div class="chip-row-wrap" id="pi-cat-row">
@@ -1683,13 +1751,17 @@ function openPoolItemSheet(id){
     };
   });
   document.getElementById('pi-save').onclick = ()=>{
+    const title=document.getElementById('pi-title').value.trim();
+    if(!title){ showToast('이름을 입력해줘'); return; }
     const dateVal = document.getElementById('pi-date').value;
+    task.title=title;
     task.location = document.getElementById('pi-location').value.trim();
     task.memo = document.getElementById('pi-memo').value.trim();
     task.categoryId = selectedCat || null;
     if(dateVal){
+      task.sourceWeekKey = task.weekKey || fmtDate(weekCursor);
       task.scope='day'; task.date=dateVal; task.weekKey=null; task.monthKey=null; task.sortOrder=nextTaskSortOrder();
-      showToast('해당 날짜의 태스크로 등록했어');
+      showToast('해당 날짜의 할 일로 옮겼어');
     } else {
       showToast('저장했어');
     }
