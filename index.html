@@ -138,6 +138,13 @@ body{ margin:0; padding:0; width:100%; min-height:100vh; min-height:100dvh; colo
 .routine-manage-title{ font-size:13px; font-weight:700; overflow-wrap:anywhere; }
 .routine-drag-handle{ color:var(--ink-faint); cursor:grab; touch-action:none; user-select:none; font-size:17px; line-height:1; padding:6px 3px; }
 .routine-drag-handle:active{ cursor:grabbing; }
+.category-manage-list{ display:flex; flex-direction:column; gap:7px; }
+.category-manage-item{ display:flex; align-items:center; gap:8px; padding:10px 11px; background:var(--card); border:1px solid var(--line); border-radius:12px; }
+.category-manage-item.dragging{ opacity:.72; transform:scale(1.01); box-shadow:0 8px 18px rgba(0,0,0,.10); }
+.category-manage-main{ flex:1; min-width:0; display:flex; align-items:center; gap:8px; }
+.category-manage-title{ font-size:13px; font-weight:700; overflow-wrap:anywhere; }
+.category-drag-handle{ color:var(--ink-faint); cursor:grab; touch-action:none; user-select:none; font-size:17px; line-height:1; padding:6px 3px; }
+.category-drag-handle:active{ cursor:grabbing; color:var(--primary-deep); }
 .icon-btn-plain{ background:none;border:none;font-size:14px;color:var(--ink-faint);cursor:pointer;padding:2px 4px;}
 
 .summary-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
@@ -409,6 +416,9 @@ function normalizeState(parsed){
   merged.routineCompletions = (merged.routineCompletions && typeof merged.routineCompletions==='object') ? merged.routineCompletions : {};
   merged.categories = Array.isArray(merged.categories) ? merged.categories : [];
 
+  merged.categories.forEach((category,index)=>{
+    category.sortOrder = Number.isFinite(Number(category.sortOrder)) ? Number(category.sortOrder) : (index+1)*1000;
+  });
   merged.routines.forEach((routine,index)=>{
     routine.sortOrder = Number.isFinite(Number(routine.sortOrder)) ? Number(routine.sortOrder) : (index+1)*1000;
   });
@@ -750,6 +760,16 @@ function sortGoalItemsForDisplay(items){
 
 /* ================= 조회 헬퍼 ================= */
 function catById(id){ return state.categories.find(c=>c.id===id); }
+function categorySortValue(category){
+  const order=Number(category?.sortOrder);
+  return Number.isFinite(order) ? order : 999999999;
+}
+function orderedCategories(){
+  return [...state.categories].sort((a,b)=>categorySortValue(a)-categorySortValue(b) || String(a.id).localeCompare(String(b.id)));
+}
+function nextCategorySortOrder(){
+  return state.categories.reduce((max,category)=>Math.max(max,categorySortValue(category)),0)+1000;
+}
 function tasksForDate(dateStr){ return state.tasks.filter(t=>t.scope==='day' && t.date===dateStr); }
 function tasksForWeek(weekKey){ return state.tasks.filter(t=>t.scope==='week' && t.weekKey===weekKey); }
 function tasksForMonth(monthKey){ return state.tasks.filter(t=>t.scope==='month' && t.monthKey===monthKey); }
@@ -941,14 +961,14 @@ function renderDayView(date, isHome){
   }
 
   let catSectionsHtml = '';
-  state.categories.forEach(cat=>{
+  orderedCategories().forEach(cat=>{
     const items = groups[cat.id] || [];
     const isRenaming = renamingCatId===cat.id;
     const headLabel = isRenaming
       ? `<input type="text" id="rename-input-${cat.id}" value="${escapeHtml(cat.name)}" style="max-width:140px;padding:4px 8px;font-size:13px;">`
       : `<button class="cat-add-label" data-cat-quickadd="${cat.id}"><span class="cat-dot" style="background:${cat.color}"></span>${escapeHtml(cat.name)} <span class="plus-badge">+</span></button>`;
     catSectionsHtml += `<div class="section">
-      <div class="cat-head">${headLabel}<div class="cat-head-actions"><button class="icon-btn-plain" data-cat-rename="${cat.id}" aria-label="카테고리 이름 수정">✎</button><button class="icon-btn-plain" data-cat-delete="${cat.id}" aria-label="카테고리 삭제">✕</button></div></div>
+      <div class="cat-head">${headLabel}</div>
       <div class="sortable-task-list" data-sort-context="day|${dStr}|${cat.id}">${sortTasksForDisplay(items).map(t=>taskRowHtml(t, cat.color)).join('')}</div>
       ${openCatAddId===cat.id ? `<div data-inline-editor="task" class="inline-add-row">
         <input type="text" id="cat-add-input-${cat.id}" placeholder="한 줄로 적기" data-enter-add="cat|${cat.id}">
@@ -1666,7 +1686,7 @@ function openTaskDetailSheet(id){
       <div class="field-row">
         <div class="field-label">카테고리</div>
         <div class="chip-row-wrap" id="detail-cat-row">
-          ${state.categories.map(c=>`<span class="cat-chip ${task.categoryId===c.id?'selected':''}" data-detail-cat-pick="${c.id}"><span class="cat-dot" style="background:${c.color}"></span>${escapeHtml(c.name)}</span>`).join('')}
+          ${orderedCategories().map(c=>`<span class="cat-chip ${task.categoryId===c.id?'selected':''}" data-detail-cat-pick="${c.id}"><span class="cat-dot" style="background:${c.color}"></span>${escapeHtml(c.name)}</span>`).join('')}
           <span class="cat-chip ${!task.categoryId?'selected':''}" data-detail-cat-pick="">미분류</span>
         </div>
       </div>
@@ -1727,11 +1747,12 @@ function openPoolItemSheet(id){
     <div class="sheet-title">주간 할 일 수정</div>
     <div class="field-row"><div class="field-label">이름</div><input type="text" id="pi-title" value="${escapeHtml(task.title)}" placeholder="할 일 이름"></div>
     <div class="field-row"><div class="field-label">마감 일자 (선택)</div><input type="date" id="pi-date" value=""></div>
-    <div class="faint" style="margin:-6px 0 12px;">날짜를 정하면 그날의 할 일로 옮겨져. 다시 주간으로 되돌리는 것도 가능해.</div>
+    <button class="btn btn-ghost" id="pi-today" style="width:100%;margin:-3px 0 10px;">이 할 일 오늘 하기</button>
+    <div class="faint" style="margin:-3px 0 12px;">날짜를 정하면 그날의 할 일로 옮겨져. 다시 주간으로 되돌리는 것도 가능해.</div>
     <div class="field-row">
       <div class="field-label">카테고리</div>
       <div class="chip-row-wrap" id="pi-cat-row">
-        ${state.categories.map(c=>`<span class="cat-chip ${task.categoryId===c.id?'selected':''}" data-detail-cat-pick="${c.id}"><span class="cat-dot" style="background:${c.color}"></span>${escapeHtml(c.name)}</span>`).join('')}
+        ${orderedCategories().map(c=>`<span class="cat-chip ${task.categoryId===c.id?'selected':''}" data-detail-cat-pick="${c.id}"><span class="cat-dot" style="background:${c.color}"></span>${escapeHtml(c.name)}</span>`).join('')}
         <span class="cat-chip ${!task.categoryId?'selected':''}" data-detail-cat-pick="">미분류</span>
       </div>
     </div>
@@ -1750,6 +1771,19 @@ function openPoolItemSheet(id){
       chip.classList.add('selected');
     };
   });
+  const savePoolEditsToDay=(dateVal,toastMessage)=>{
+    const title=document.getElementById('pi-title').value.trim();
+    if(!title){ showToast('이름을 입력해줘'); return false; }
+    task.title=title;
+    task.location=document.getElementById('pi-location').value.trim();
+    task.memo=document.getElementById('pi-memo').value.trim();
+    task.categoryId=selectedCat || null;
+    task.sourceWeekKey=task.weekKey || fmtDate(weekCursor);
+    task.scope='day';task.date=dateVal;task.weekKey=null;task.monthKey=null;task.sortOrder=nextTaskSortOrder();
+    scheduleSave();closeSheet();render();showToast(toastMessage);
+    return true;
+  };
+  document.getElementById('pi-today').onclick=()=>savePoolEditsToDay(fmtDate(new Date()),'오늘 할 일로 가져왔어');
   document.getElementById('pi-save').onclick = ()=>{
     const title=document.getElementById('pi-title').value.trim();
     if(!title){ showToast('이름을 입력해줘'); return; }
@@ -1759,13 +1793,10 @@ function openPoolItemSheet(id){
     task.memo = document.getElementById('pi-memo').value.trim();
     task.categoryId = selectedCat || null;
     if(dateVal){
-      task.sourceWeekKey = task.weekKey || fmtDate(weekCursor);
-      task.scope='day'; task.date=dateVal; task.weekKey=null; task.monthKey=null; task.sortOrder=nextTaskSortOrder();
-      showToast('해당 날짜의 할 일로 옮겼어');
-    } else {
-      showToast('저장했어');
+      savePoolEditsToDay(dateVal,'해당 날짜의 할 일로 옮겼어');
+      return;
     }
-    scheduleSave(); closeSheet(); render();
+    scheduleSave(); closeSheet(); render(); showToast('저장했어');
   };
   document.getElementById('pi-delete').onclick = ()=>{
     openConfirmSheet('이 항목을 삭제할까?', ()=>{ state.tasks = state.tasks.filter(x=>x.id!==id); scheduleSave(); render(); });
@@ -1862,7 +1893,7 @@ function openMoodSheet(dateStr){
   };
 }
 
-function requestDeleteCategory(id){
+function requestDeleteCategory(id, afterDelete=null){
   const cat=catById(id); if(!cat) return;
   const count=state.tasks.filter(task=>task.categoryId===id).length;
   const msg=count
@@ -1873,7 +1904,9 @@ function requestDeleteCategory(id){
     state.tasks.forEach(task=>{ if(task.categoryId===id) task.categoryId=null; });
     Object.values(state.monthGoalItems||{}).forEach(items=>{ (items||[]).forEach(item=>{ if(item.categoryId===id) item.categoryId=null; }); });
     openCatAddId=null; renamingCatId=null;
-    scheduleSave(); render(); showToast(count?'할 일은 미분류로 옮겼어':'카테고리를 삭제했어');
+    scheduleSave(); render();
+    if(typeof afterDelete==='function') afterDelete();
+    showToast(count?'할 일은 미분류로 옮겼어':'카테고리를 삭제했어');
   });
 }
 
@@ -1903,11 +1936,20 @@ function openMonthGoalSheet(monthKey,id){
   };
 }
 
-function openCategorySheet(){
+function openCategorySheet(){ renderCategorySheet(); }
+function renderCategorySheet(){
+  const items=orderedCategories().map(cat=>`<div class="category-manage-item" data-category-id="${cat.id}">
+    <span class="category-drag-handle" aria-label="순서 변경">⠿</span>
+    <div class="category-manage-main"><span class="cat-dot" style="background:${cat.color}"></span><span class="category-manage-title">${escapeHtml(cat.name)}</span></div>
+    <button class="icon-btn-plain" data-edit-category="${cat.id}" aria-label="카테고리 수정">✎</button>
+    <button class="icon-btn-plain" data-manage-delete-category="${cat.id}" aria-label="카테고리 삭제">✕</button>
+  </div>`).join('') || `<div class="pool-empty">등록된 카테고리가 없어</div>`;
   openSheet(`
     <div class="sheet-handle"></div>
-    <div class="sheet-title">새 카테고리</div>
-    <div class="field-row"><input type="text" id="new-cat-name" placeholder="카테고리 이름"></div>
+    <div class="sheet-title">카테고리 관리</div>
+    <div class="faint" style="margin:-5px 0 11px;">⠿를 눌러 끌면 오늘 화면의 카테고리 순서도 함께 바뀌어.</div>
+    <div class="category-manage-list" id="category-manage-list" style="margin-bottom:16px;">${items}</div>
+    <div class="field-row"><input type="text" id="new-cat-name" placeholder="새 카테고리 이름"></div>
     <div class="field-row">
       <div class="field-label">색상</div>
       <div class="swatch-row" id="swatch-row">
@@ -1915,21 +1957,53 @@ function openCategorySheet(){
       </div>
     </div>
     <div class="sheet-actions">
-      <button class="btn btn-ghost" id="cat-cancel">취소</button>
-      <button class="btn btn-primary" id="cat-save">만들기</button>
+      <button class="btn btn-ghost" id="cat-close">닫기</button>
+      <button class="btn btn-primary" id="cat-save">추가</button>
     </div>
   `);
-  let selColor = SWATCHES[0];
+  let selColor=SWATCHES[0];
   document.querySelectorAll('#swatch-row .swatch').forEach(sw=>{
-    sw.onclick = ()=>{ selColor = sw.getAttribute('data-swatch'); document.querySelectorAll('#swatch-row .swatch').forEach(s=>s.classList.remove('selected')); sw.classList.add('selected'); };
+    sw.onclick=()=>{selColor=sw.dataset.swatch;document.querySelectorAll('#swatch-row .swatch').forEach(s=>s.classList.remove('selected'));sw.classList.add('selected')};
   });
-  document.getElementById('cat-cancel').onclick = closeSheet;
-  document.getElementById('cat-save').onclick = ()=>{
-    const name = document.getElementById('new-cat-name').value.trim();
-    if(!name){ showToast('이름을 입력해줘'); return; }
-    state.categories.push({ id:uid(), name, color:selColor });
-    scheduleSave(); closeSheet(); render();
+  document.getElementById('cat-close').onclick=closeSheet;
+  document.getElementById('cat-save').onclick=()=>{
+    const name=document.getElementById('new-cat-name').value.trim();
+    if(!name){showToast('이름을 입력해줘');return;}
+    state.categories.push({id:uid(),name,color:selColor,sortOrder:nextCategorySortOrder()});
+    scheduleSave();renderCategorySheet();render();showToast('카테고리를 추가했어');
   };
+  document.querySelectorAll('[data-edit-category]').forEach(btn=>btn.onclick=()=>openCategoryEditSheet(btn.dataset.editCategory));
+  document.querySelectorAll('[data-manage-delete-category]').forEach(btn=>btn.onclick=()=>requestDeleteCategory(btn.dataset.manageDeleteCategory,renderCategorySheet));
+  enableCategoryManagerDrag();
+}
+
+function openCategoryEditSheet(id){
+  const cat=catById(id);if(!cat)return;
+  openSheet(`
+    <div class="sheet-handle"></div><div class="sheet-title">카테고리 수정</div>
+    <div class="field-row"><div class="field-label">이름</div><input type="text" id="edit-cat-name" value="${escapeHtml(cat.name)}"></div>
+    <div class="field-row"><div class="field-label">색상</div><div class="swatch-row" id="edit-cat-swatches">${SWATCHES.map(c=>`<span class="swatch ${cat.color===c?'selected':''}" style="background:${c}" data-swatch="${c}"></span>`).join('')}</div></div>
+    <div class="sheet-actions"><button class="btn btn-ghost" id="edit-cat-cancel">취소</button><button class="btn btn-primary" id="edit-cat-save">저장</button></div>
+  `);
+  let color=cat.color||SWATCHES[0];
+  document.querySelectorAll('#edit-cat-swatches .swatch').forEach(sw=>sw.onclick=()=>{color=sw.dataset.swatch;document.querySelectorAll('#edit-cat-swatches .swatch').forEach(s=>s.classList.remove('selected'));sw.classList.add('selected')});
+  document.getElementById('edit-cat-cancel').onclick=renderCategorySheet;
+  document.getElementById('edit-cat-save').onclick=()=>{
+    const name=document.getElementById('edit-cat-name').value.trim();
+    if(!name){showToast('이름을 입력해줘');return;}
+    cat.name=name;cat.color=color;scheduleSave();renderCategorySheet();render();showToast('카테고리를 수정했어');
+  };
+}
+
+function enableCategoryManagerDrag(){
+  const list=document.getElementById('category-manage-list');if(!list)return;
+  let drag=null;
+  list.querySelectorAll('.category-drag-handle').forEach(handle=>{
+    handle.onpointerdown=e=>{if(e.button>0)return;const row=handle.closest('.category-manage-item');drag={row,handle,pointerId:e.pointerId,startY:e.clientY,started:false};try{handle.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault()};
+    handle.onpointermove=e=>{if(!drag||e.pointerId!==drag.pointerId)return;if(!drag.started&&Math.abs(e.clientY-drag.startY)<5)return;drag.started=true;drag.row.classList.add('dragging');const under=document.elementFromPoint(e.clientX,e.clientY)?.closest?.('.category-manage-item');if(!under||under===drag.row||under.parentElement!==list)return;const rect=under.getBoundingClientRect();list.insertBefore(drag.row,e.clientY<rect.top+rect.height/2?under:under.nextSibling);e.preventDefault()};
+    const finish=e=>{if(!drag||e.pointerId!==drag.pointerId)return;drag.row.classList.remove('dragging');if(drag.started){[...list.querySelectorAll('.category-manage-item')].forEach((el,i)=>{const cat=catById(el.dataset.categoryId);if(cat)cat.sortOrder=(i+1)*1000});scheduleSave();renderCategorySheet();render()}drag=null};
+    handle.onpointerup=finish;handle.onpointercancel=finish;
+  });
 }
 
 function openRoutineSheet(){ renderRoutineSheet(); }
