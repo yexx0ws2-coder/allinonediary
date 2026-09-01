@@ -2,8 +2,20 @@
 <html lang="ko" data-theme="pink">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>오늘, 다이어리</title>
+<meta name="theme-color" content="#FBF6F5">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="오늘, 다이어리">
+<meta name="application-name" content="오늘, 다이어리">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="./favicon-64.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.css"></script>
@@ -57,6 +69,15 @@
   --shadow-soft:0 2px 10px rgba(135,100,160,0.10);
   --sched-accent:#9672B2; --sched-tint:#F4EDF9;
 }
+
+:root[data-theme="whitegray"]{
+  --bg:#FCFCFC; --bg-deep:#F1F3F5; --card:#FFFFFF;
+  --ink:#2F3337; --ink-soft:#7B8188; --ink-faint:#C7CCD1;
+  --line:#E4E7EA;
+  --primary:#A7ADB4; --primary-deep:#6F767E; --primary-tint:#F0F2F4;
+  --shadow-soft:0 2px 10px rgba(55,60,65,0.07);
+  --sched-accent:#858C94; --sched-tint:#F3F5F6;
+}
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html{ margin:0; padding:0; width:100%; min-height:100%; background:var(--bg-deep); overflow-x:hidden; }
 body{ margin:0; padding:0; width:100%; min-height:100vh; min-height:100dvh; color:var(--ink); word-break:keep-all; overflow-x:hidden; overscroll-behavior-y:auto; -webkit-overflow-scrolling:touch; }
@@ -83,9 +104,6 @@ body{ margin:0; padding:0; width:100%; min-height:100vh; min-height:100dvh; colo
 .hero-badge{ width:56px;height:56px;border-radius:50%; background:radial-gradient(circle at 30% 30%, var(--primary-tint), var(--bg-deep) 70%); display:flex;align-items:center;justify-content:center; font-size:22px;font-weight:700;color:var(--primary-deep); flex-shrink:0;}
 .hero-text{ flex:1; min-width:0; }
 .hero-text .hero-date{ font-size:17px; font-weight:700; }
-.hero-date-picker{ display:block; width:100%; padding:3px 0; border:0; background:none; color:inherit; font:inherit; text-align:left; cursor:pointer; border-radius:7px; }
-.hero-date-picker:active{ background:var(--primary-tint); }
-.hero-date-picker:focus-visible{ outline:2px solid var(--primary); outline-offset:2px; }
 .hero-text .hero-sub{ font-size:11.5px; color:var(--ink-soft); margin-top:1px; }
 .mood-btn{ width:40px;height:40px;border-radius:50%; border:1px dashed var(--ink-faint); background:var(--card); font-size:19px; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center;}
 .mood-btn.set{ border-style:solid; border-color:var(--primary); background:var(--primary-tint); }
@@ -162,8 +180,7 @@ body{ margin:0; padding:0; width:100%; min-height:100vh; min-height:100dvh; colo
 .chk-sm.done{ background:var(--primary); color:#fff;}
 .goal-item-text{ flex:1; min-width:0; overflow-wrap:anywhere;}
 .goal-item-text.done{ text-decoration:line-through; color:var(--ink-faint);}
-.goal-item-main{ flex:1; min-width:0; min-height:34px; display:flex; align-items:center; justify-content:space-between; gap:7px; padding:6px 2px; border:none; background:none; color:inherit; font-family:inherit; text-align:left; cursor:pointer; border-radius:8px; }
-.goal-item-main:not(.static):active{ background:var(--primary-tint); }
+.goal-item-main{ flex:1; min-width:0; display:flex; align-items:center; justify-content:space-between; gap:7px; padding:2px 0; border:none; background:none; color:inherit; font-family:inherit; text-align:left; cursor:pointer; }
 .goal-item-main.static{ cursor:default; }
 .goal-date-chip{ flex-shrink:0; padding:2px 6px; border-radius:9px; background:var(--primary-tint); color:var(--primary-deep); font-family:'JetBrains Mono',monospace; font-size:9.5px; font-weight:700; white-space:nowrap; }
 .goal-date-chip.empty{ background:var(--bg-deep); color:var(--ink-faint); font-family:inherit; }
@@ -361,7 +378,7 @@ const MONTH_NAMES = ['1월','2월','3월','4월','5월','6월','7월','8월','9�
 const SWATCHES = ['#E7ABB2','#DDC9A3','#A9BFA0','#9FB6C4','#B39AB0','#DCC08A'];
 const MOOD_EMOJIS = ['😊','🥰','😌','😐','😔','😢','😤','😡','😴','🥳','😎','🤔','😭','✨','💪','🤒'];
 const AVATAR_EMOJIS = ['🙂','😺','🐶','🐰','🦊','🐻','🐼','🌸','⭐','🍀','🐨','🐹'];
-const THEMES = [ {id:'pink', color:'#DD8F98', label:'핑크'}, {id:'blue', color:'#8FB3DD', label:'블루'}, {id:'green', color:'#93C0A4', label:'그린'}, {id:'soymilk', color:'#A88F7A', label:'소이밀크'}, {id:'bluelemon', color:'linear-gradient(135deg,#82ADDA 0 50%,#FFF2A8 50% 100%)', label:'블루 레몬'}, {id:'purple', color:'#AE8AC8', label:'퍼플'} ];
+const THEMES = [ {id:'pink', color:'#DD8F98', label:'핑크'}, {id:'blue', color:'#8FB3DD', label:'블루'}, {id:'green', color:'#93C0A4', label:'그린'}, {id:'soymilk', color:'#A88F7A', label:'소이밀크'}, {id:'bluelemon', color:'linear-gradient(135deg,#82ADDA 0 50%,#FFF2A8 50% 100%)', label:'블루 레몬'}, {id:'purple', color:'#AE8AC8', label:'퍼플'}, {id:'whitegray', color:'linear-gradient(135deg,#FFFFFF 0 50%,#A7ADB4 50% 100%)', label:'화이트 그레이'} ];
 const PERIODS = [['morning','🌅 아침'],['afternoon','☀️ 낮'],['evening','🌙 밤']];
 
 function defaultState(){
@@ -721,8 +738,38 @@ async function connectGoogleAccount(){
   }
 }
 
+const APP_THEME_COLORS = {
+  pink:'#FBF6F5',
+  blue:'#F6F9FC',
+  green:'#F6FBF7',
+  soymilk:'#F7F3EC',
+  bluelemon:'#F8FBFF',
+  purple:'#FAF8FD',
+  whitegray:'#FCFCFC'
+};
+
+function updateAppThemeChrome(themeId){
+  const color = APP_THEME_COLORS[themeId] || APP_THEME_COLORS.pink;
+  let meta = document.querySelector('meta[name="theme-color"]');
+  if(!meta){
+    meta = document.createElement('meta');
+    meta.name = 'theme-color';
+    document.head.appendChild(meta);
+  }
+  meta.setAttribute('content', color);
+}
+
+function registerServiceWorker(){
+  if(!('serviceWorker' in navigator)) return;
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('./service-worker.js', {updateViaCache:'none'}).catch(err=>{
+      console.warn('Service Worker 등록 실패:', err);
+    });
+  }, {once:true});
+}
+
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
-function applyTheme(t){ document.documentElement.setAttribute('data-theme', t); }
+function applyTheme(t){ document.documentElement.setAttribute('data-theme', t); updateAppThemeChrome(t); }
 
 /* ================= 날짜 유틸 ================= */
 function fmtDate(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
@@ -747,27 +794,6 @@ function shiftTodayDate(amount){
 function returnToday(){
   todayCursor = new Date(); todayCursor.setHours(0,0,0,0);
   resetInlineStates(); render();
-}
-function openTodayDatePicker(){
-  const selected = fmtDate(todayCursor);
-  openSheet(`
-    <div class="sheet-handle"></div>
-    <div class="sheet-title">날짜 이동</div>
-    <div class="field-row"><div class="field-label">보고 싶은 날짜</div><input type="date" id="today-date-picker" value="${selected}"></div>
-    <div class="sheet-actions">
-      <button class="btn btn-ghost" id="today-date-cancel">취소</button>
-      <button class="btn btn-primary" id="today-date-go">이 날짜로</button>
-    </div>
-  `);
-  const input = document.getElementById('today-date-picker');
-  document.getElementById('today-date-cancel').onclick = closeSheet;
-  document.getElementById('today-date-go').onclick = ()=>{
-    if(!input.value) return;
-    todayCursor = parseDate(input.value);
-    todayCursor.setHours(0,0,0,0);
-    closeSheet(); resetInlineStates(); render();
-  };
-  setTimeout(()=>{ if(input.showPicker) input.showPicker(); else input.focus(); }, 0);
 }
 function formatGoalDate(dateStr){
   if(!dateStr) return '';
@@ -956,7 +982,7 @@ function renderDayView(date, isHome){
   const heroCore = `<div class="hero">
     <div class="hero-badge">${date.getDate()}</div>
     <div class="hero-text">
-      ${isHome ? `<button class="hero-date hero-date-picker" data-open-today-date aria-label="날짜 선택">${date.getMonth()+1}월 ${date.getDate()}일</button>` : `<div class="hero-date">${date.getMonth()+1}월 ${date.getDate()}일</div>`}
+      <div class="hero-date">${date.getMonth()+1}월 ${date.getDate()}일</div>
       <div class="hero-sub">${isToday?'오늘':DOW_KR[date.getDay()]+'요일'}${isHome&&!isToday?'<button class="today-return-btn" data-day-today>오늘로</button>':''}</div>
     </div>
     <button class="mood-btn ${mood?'set':''}" data-open-mood="${dStr}">${mood?mood.emoji:'＋'}</button>
@@ -1264,7 +1290,6 @@ function renderProfileView(){
 document.addEventListener('click', (e)=>{
   const t = e.target;
   const navTarget = t.closest ? t.closest('[data-nav-tab]') : null;
-  const closestTarget = selector => t.closest ? t.closest(selector) : null;
 
   /* 아이콘·텍스트·빈 여백 어디를 눌러도 해당 탭 버튼 전체를 인식 */
   if(navTarget){
@@ -1279,16 +1304,13 @@ document.addEventListener('click', (e)=>{
   if(t.matches('[data-drill-back]')){ drillDate=null; resetInlineStates(); render(); return; }
   if(t.matches('[data-day-shift]')){ shiftTodayDate(parseInt(t.getAttribute('data-day-shift'))); return; }
   if(t.matches('[data-day-today]')){ returnToday(); return; }
-  const todayDateTarget = closestTarget('[data-open-today-date]');
-  if(todayDateTarget){ openTodayDatePicker(); return; }
   if(t.matches('[data-select-calendar-date]')){
     calendarSelectedDate = parseDate(t.getAttribute('data-select-calendar-date'));
     if(monthKeyOf(calendarSelectedDate)!==monthKeyOf(monthCursor)) monthCursor=new Date(calendarSelectedDate.getFullYear(),calendarSelectedDate.getMonth(),1);
     resetInlineStates(); render(); return;
   }
-  const gotoDateTarget = closestTarget('[data-goto-date]');
-  if(gotoDateTarget && !closestTarget('button, input, select, textarea, a, [data-no-day-navigation]')){
-    drillDate = parseDate(gotoDateTarget.getAttribute('data-goto-date'));
+  if(t.matches('[data-goto-date]')){
+    drillDate = parseDate(t.getAttribute('data-goto-date'));
     drillFrom = activeTab;
     resetInlineStates(); render(); return;
   }
@@ -1365,9 +1387,8 @@ document.addEventListener('click', (e)=>{
     else { scheduleRepeatDaysSelected.add(d); t.classList.add('on'); }
     return;
   }
-  const monthGoalTarget = closestTarget('[data-open-month-goal]');
-  if(monthGoalTarget){
-    const [key,id]=monthGoalTarget.getAttribute('data-open-month-goal').split('|'); openMonthGoalSheet(key,id); return;
+  if(t.matches('[data-open-month-goal]')){
+    const [key,id]=t.getAttribute('data-open-month-goal').split('|'); openMonthGoalSheet(key,id); return;
   }
   if(t.matches('[data-goal-toggle]')){
     const [scope,key,id] = t.getAttribute('data-goal-toggle').split('|');
@@ -2118,6 +2139,7 @@ function showToast(msg){
 
 /* ================= 초기화 ================= */
 (async function init(){
+  registerServiceWorker();
   resetSheetState();
   await loadState();
   render();
