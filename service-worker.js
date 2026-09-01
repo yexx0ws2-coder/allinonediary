@@ -1,4 +1,4 @@
-const CACHE_NAME = 'today-diary-shell-v2';
+const CACHE_NAME = 'today-diary-shell-v3';
 const APP_SHELL = [
   './',
   './index.html',
@@ -15,7 +15,16 @@ const APP_SHELL = [
 ];
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    await Promise.all(APP_SHELL.map(async asset => {
+      try {
+        await cache.add(asset);
+      } catch (error) {
+        console.warn('App shell asset cache skipped:', asset, error);
+      }
+    }));
+  })());
   self.skipWaiting();
 });
 
