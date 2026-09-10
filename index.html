@@ -1117,11 +1117,27 @@ function renderDayView(date, isHome){
         <input type="text" id="sched-title-input" placeholder="일정 한 줄로" data-enter-add="schedule">
         <button class="inline-reg-btn" data-save-schedule>추가</button>
       </div>
-      <label style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-soft);margin:2px 0 8px;">
-        <input type="checkbox" id="sched-repeat-toggle" style="width:14px;height:14px;">🔁 매주 반복
-      </label>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-soft);margin:2px 0 8px;">
+        <label style="display:flex;align-items:center;gap:6px;">
+          <input type="checkbox" id="sched-repeat-toggle" style="width:14px;height:14px;">🔁 매주 반복
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;">
+          <input type="checkbox" id="sched-range-toggle" style="width:14px;height:14px;">↔ 기간 일정
+        </label>
+      </div>
       <div class="dow-row" id="sched-repeat-days" style="display:none;">
         ${DOW_KR.map((d,i)=>`<button type="button" class="dow-btn" data-repeat-dow="${i}">${d}</button>`).join('')}
+      </div>
+      <div id="sched-range-dates" style="display:none;gap:8px;align-items:end;margin:4px 0 8px;">
+        <div style="flex:1;min-width:0;">
+          <div class="field-label" style="margin-bottom:4px;">시작일</div>
+          <input type="date" id="sched-start-date" value="${dStr}" style="width:100%;">
+        </div>
+        <div style="padding-bottom:9px;color:var(--ink-faint);">~</div>
+        <div style="flex:1;min-width:0;">
+          <div class="field-label" style="margin-bottom:4px;">종료일</div>
+          <input type="date" id="sched-end-date" value="${dStr}" style="width:100%;">
+        </div>
       </div>
     </div>`;
   }else{
@@ -1751,7 +1767,32 @@ document.addEventListener('keydown', (e)=>{
 document.addEventListener('change', (e)=>{
   if(e.target.id==='sched-repeat-toggle'){
     const row = document.getElementById('sched-repeat-days');
+    const rangeToggle = document.getElementById('sched-range-toggle');
+    const rangeDates = document.getElementById('sched-range-dates');
     if(row) row.style.display = e.target.checked ? 'flex' : 'none';
+    if(e.target.checked && rangeToggle){
+      rangeToggle.checked = false;
+      if(rangeDates) rangeDates.style.display = 'none';
+    }
+  }
+  if(e.target.id==='sched-range-toggle'){
+    const rangeDates = document.getElementById('sched-range-dates');
+    const repeatToggle = document.getElementById('sched-repeat-toggle');
+    const repeatDays = document.getElementById('sched-repeat-days');
+    if(rangeDates) rangeDates.style.display = e.target.checked ? 'flex' : 'none';
+    if(e.target.checked && repeatToggle){
+      repeatToggle.checked = false;
+      if(repeatDays) repeatDays.style.display = 'none';
+      scheduleRepeatDaysSelected = new Set();
+      document.querySelectorAll('[data-repeat-dow]').forEach(btn=>btn.classList.remove('on'));
+    }
+  }
+  if(e.target.id==='sched-start-date'){
+    const end = document.getElementById('sched-end-date');
+    if(end && e.target.value){
+      end.min = e.target.value;
+      if(end.value && end.value < e.target.value) end.value = e.target.value;
+    }
   }
   if(e.target.matches('[data-notification-pref]')){
     const key = e.target.getAttribute('data-notification-pref');
@@ -1797,7 +1838,33 @@ function saveSchedule(){
   if(!title){ showToast('내용을 입력해줘'); return; }
   const time = timeInp.value || '09:00';
   const repeatToggle = document.getElementById('sched-repeat-toggle');
-  if(repeatToggle && repeatToggle.checked && scheduleRepeatDaysSelected.size>0){
+  const rangeToggle = document.getElementById('sched-range-toggle');
+
+  if(rangeToggle && rangeToggle.checked){
+    const startValue = document.getElementById('sched-start-date')?.value;
+    const endValue = document.getElementById('sched-end-date')?.value;
+    if(!startValue || !endValue){ showToast('시작일과 종료일을 골라줘'); return; }
+
+    const startDate = parseDate(startValue);
+    const endDate = parseDate(endValue);
+    if(endDate < startDate){ showToast('종료일은 시작일보다 빠를 수 없어'); return; }
+
+    const dayMs = 24*60*60*1000;
+    const dayCount = Math.round((endDate - startDate) / dayMs) + 1;
+    if(dayCount > 366){ showToast('기간 일정은 최대 366일까지 등록할 수 있어'); return; }
+
+    const rangeGroupId = uid();
+    for(let i=0;i<dayCount;i++){
+      const date = addDays(startDate, i);
+      state.tasks.push({
+        id:uid(), title, done:false, scope:'day', date:fmtDate(date), time,
+        categoryId:null, memo:'', location:'', createdAt:Date.now()+i,
+        sortOrder:nextTaskSortOrder(), rangeGroupId
+      });
+    }
+    showToast(`${dayCount}일 일정으로 등록했어`);
+  } else if(repeatToggle && repeatToggle.checked){
+    if(scheduleRepeatDaysSelected.size===0){ showToast('반복 요일을 골라줘'); return; }
     state.recurringSchedules.push({ id:uid(), title, time, days:[...scheduleRepeatDaysSelected], memo:'', location:'' });
     showToast('반복 일정으로 등록했어');
   } else {
@@ -2063,6 +2130,7 @@ function openRecurringEditSheet(id, dateStr){
     <div class="field-row"><div class="field-label">장소</div><input type="text" id="rs-location" value="${escapeHtml(r.location||'')}"></div>
     <div class="field-row"><div class="field-label">메모</div><textarea id="rs-memo">${escapeHtml(r.memo||'')}</textarea></div>
     <div class="sheet-actions" style="flex-wrap:wrap;">
+      ${dateStr ? `<button class="btn btn-ghost" id="rs-delete-once" style="color:#B45C65;">이 날만 삭제</button>` : ''}
       <button class="btn btn-danger" id="rs-delete">전체 삭제</button>
       ${dateStr ? `<button class="btn btn-ghost" id="rs-save-once">이 날만 저장</button>` : ''}
       <button class="btn btn-primary" id="rs-save-all">전체 저장</button>
@@ -2073,6 +2141,12 @@ function openRecurringEditSheet(id, dateStr){
     btn.onclick = ()=>{ const d=parseInt(btn.getAttribute('data-dow')); if(selDays.has(d)){selDays.delete(d);btn.classList.remove('on');} else {selDays.add(d);btn.classList.add('on');} };
   });
   if(dateStr){
+    document.getElementById('rs-delete-once').onclick = ()=>{
+      openConfirmSheet(`${dateStr} 반복 일정만 삭제할까?`, ()=>{
+        state.recurringScheduleExceptions[key] = Object.assign({}, ex, {cancelled:true});
+        scheduleSave(); render(); showToast('이 날 일정만 삭제했어');
+      });
+    };
     document.getElementById('rs-save-once').onclick = ()=>{
       const time = document.getElementById('rs-time').value || r.time;
       const title = document.getElementById('rs-title').value.trim() || r.title;
