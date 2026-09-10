@@ -1293,7 +1293,7 @@ function renderCalendarView(){
     </div>
     <div class="goal-box"><div class="section-title" style="margin-bottom:4px;">🎯 이 달 목표</div>${goalChecklistHtml('month',mKey)}</div>
     <div class="cal-grid">${cells}</div>
-    <div class="faint" style="text-align:center;margin:-8px 0 13px;">날짜를 누르면 아래 내용이 바뀌어</div>
+    <div class="faint" style="text-align:center;margin:-8px 0 13px;">날짜를 누르면 해당 날짜의 오늘 화면으로 이동해</div>
     <div class="calendar-day-detail">
       <div class="calendar-detail-head"><div class="calendar-detail-date">${calendarSelectedDate.getMonth()+1}월 ${calendarSelectedDate.getDate()}일</div><div class="calendar-detail-sub">${selectedStr===todayS?'오늘':DOW_KR[calendarSelectedDate.getDay()]+'요일'}</div></div>
       <div class="calendar-detail-section"><div class="calendar-detail-title">일정</div>${scheduleHtml}</div>
@@ -1465,9 +1465,15 @@ document.addEventListener('click', (e)=>{
   if(t.matches('[data-drill-back]')){ drillDate=null; resetInlineStates(); render(); return; }
   if(t.matches('[data-day-shift]')){ shiftTodayDate(parseInt(t.getAttribute('data-day-shift'))); return; }
   if(t.matches('[data-day-today]')){ returnToday(); return; }
-  if(t.matches('[data-select-calendar-date]')){
-    calendarSelectedDate = parseDate(t.getAttribute('data-select-calendar-date'));
-    if(monthKeyOf(calendarSelectedDate)!==monthKeyOf(monthCursor)) monthCursor=new Date(calendarSelectedDate.getFullYear(),calendarSelectedDate.getMonth(),1);
+  const calendarDateTarget = t.closest ? t.closest('[data-select-calendar-date]') : null;
+  if(calendarDateTarget && !t.closest?.('button, input, select, textarea, a, [data-no-day-navigation]')){
+    const selectedDate = parseDate(calendarDateTarget.getAttribute('data-select-calendar-date'));
+    selectedDate.setHours(0,0,0,0);
+    calendarSelectedDate = new Date(selectedDate);
+    todayCursor = new Date(selectedDate);
+    activeTab = 'today';
+    drillDate = null;
+    drillFrom = null;
     resetInlineStates(); render(); return;
   }
   if(t.matches('[data-goto-date]')){
