@@ -965,16 +965,22 @@ function dayDotColors(dateStr){
     return c ? c.color : '#CBBBBC';
   });
 }
+function isTbdTime(value){ return value==='TBD'; }
+function displayScheduleTime(value){ return isTbdTime(value) ? '미정' : value; }
+function scheduleTimeSortValue(value){ return isTbdTime(value) ? '99:99' : (value || '99:99'); }
+
 function scheduleForDate(date){
   const dStr = fmtDate(date);
-  const oneoff = tasksForDate(dStr).filter(t=>t.time).map(t=>({id:t.id, title:t.title, time:t.time, kind:'oneoff', date:dStr}));
+  const oneoff = tasksForDate(dStr)
+    .filter(t=>t.time || t.isSchedule)
+    .map(t=>({id:t.id, title:t.title, time:t.time || 'TBD', kind:'oneoff', date:dStr}));
   const dow = date.getDay();
   const recurring = state.recurringSchedules.filter(r=>r.days.includes(dow)).map(r=>{
     const ex = state.recurringScheduleExceptions?.[r.id+'|'+dStr] || {};
     if(ex.cancelled) return null;
-    return {id:r.id, title:ex.title ?? r.title, time:ex.time ?? r.time, kind:'recurring', date:dStr, hasException:Object.keys(ex).length>0};
+    return {id:r.id, title:ex.title ?? r.title, time:ex.time ?? r.time ?? 'TBD', kind:'recurring', date:dStr, hasException:Object.keys(ex).length>0};
   }).filter(Boolean);
-  return [...oneoff, ...recurring].sort((a,b)=>a.time.localeCompare(b.time));
+  return [...oneoff, ...recurring].sort((a,b)=>scheduleTimeSortValue(a.time).localeCompare(scheduleTimeSortValue(b.time)));
 }
 function goalItemsFor(scope,key){
   const store = scope==='year' ? state.yearGoalItems : state.monthGoalItems;
@@ -1055,7 +1061,7 @@ function addGoalFromInput(scope,key){
 /* ---- 오늘/데이 뷰 ---- */
 function scheduleRowHtml(s){
   return `<div class="schedule-row">
-    <span class="time-pill mono">${s.time}</span>
+    <span class="time-pill mono">${displayScheduleTime(s.time)}</span>
     <span class="schedule-title" data-open-detail="${s.kind==='recurring'?'recur:'+s.id:s.id}">${escapeHtml(s.title)}${s.kind==='recurring' ? `<span class="repeat-tag"> 🔁${s.hasException?'·':''}</span>` : ''}</span>
     <div class="row-actions">
       ${s.kind==='oneoff' ? `<button data-open-move="${s.id}">→</button><button data-delete-task="${s.id}">✕</button>` : `<button data-edit-recurring="${s.id}" data-recurring-date="${s.date}">⚙</button>`}
@@ -1113,7 +1119,12 @@ function renderDayView(date, isHome){
   if(scheduleAddOpen){
     scheduleAddRow = `<div data-inline-editor="schedule">
       <div class="inline-add-row">
-        <input type="time" id="sched-time-input" value="09:00">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="time" id="sched-time-input" value="09:00" style="flex:1;">
+          <label style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--ink-soft);white-space:nowrap;">
+            <input type="checkbox" id="sched-time-tbd" style="width:14px;height:14px;">미정
+          </label>
+        </div>
         <input type="text" id="sched-title-input" placeholder="일정 한 줄로" data-enter-add="schedule">
         <button class="inline-reg-btn" data-save-schedule>추가</button>
       </div>
@@ -1283,7 +1294,7 @@ function renderCalendarView(){
     const sched = daySchedules[0];
     let dots=''; colors.slice(0,3).forEach(c=> dots += `<span class="cal-dot" style="background:${c}"></span>`);
     const extra = colors.length>3 ? `<span style="font-size:7.5px;color:var(--ink-faint);">+${colors.length-3}</span>` : '';
-    const desktopSchedules = daySchedules.slice(0,3).map(s=>`<div class="cal-desktop-row" title="${escapeHtml(`${s.time} ${s.title}`)}"><span class="cal-desktop-time">${escapeHtml(s.time)}</span><span class="cal-desktop-title">${escapeHtml(s.title)}</span></div>`).join('');
+    const desktopSchedules = daySchedules.slice(0,3).map(s=>`<div class="cal-desktop-row" title="${escapeHtml(`${displayScheduleTime(s.time)} ${s.title}`)}"><span class="cal-desktop-time">${escapeHtml(displayScheduleTime(s.time))}</span><span class="cal-desktop-title">${escapeHtml(s.title)}</span></div>`).join('');
     const desktopMore = daySchedules.length>3 ? `<div class="cal-desktop-more">+${daySchedules.length-3}</div>` : '';
     cells += `<div class="cal-cell ${dStr===todayS?'today':''} ${dStr===selectedStr?'selected':''} ${otherMonth?'other-month':''}" data-select-calendar-date="${dStr}">
       <span class="cal-daynum">${cellDate.getDate()}</span><span class="cal-dots">${dots}${extra}</span>
@@ -1333,7 +1344,7 @@ function renderWeekView(){
     const schedList = scheduleForDate(d);
     const colors = dayDotColors(dStr);
     let dots=''; colors.slice(0,4).forEach(c=> dots += `<span class="cal-dot" style="background:${c}"></span>`);
-    const schedLines = schedList.slice(0,2).map(s=>`<div class="wd-sched-line">${s.time} ${escapeHtml(s.title)}</div>`).join('');
+    const schedLines = schedList.slice(0,2).map(s=>`<div class="wd-sched-line">${displayScheduleTime(s.time)} ${escapeHtml(s.title)}</div>`).join('');
     const schedMore = schedList.length>2 ? `<div class="wd-sched-more">+${schedList.length-2}개 더</div>` : '';
     strip += `<div class="week-day-card ${dStr===todayS?'today':''}" data-goto-date="${dStr}">
       <div class="wd-top">
@@ -1787,6 +1798,30 @@ document.addEventListener('change', (e)=>{
       document.querySelectorAll('[data-repeat-dow]').forEach(btn=>btn.classList.remove('on'));
     }
   }
+  if(e.target.id==='sched-time-tbd'){
+    const input=document.getElementById('sched-time-input');
+    if(input){
+      input.disabled=e.target.checked;
+      if(e.target.checked) input.value='';
+      else if(!input.value) input.value='09:00';
+    }
+  }
+  if(e.target.id==='d-time-tbd'){
+    const input=document.getElementById('d-time');
+    if(input){
+      input.disabled=e.target.checked;
+      if(e.target.checked) input.value='';
+      else if(!input.value) input.value='09:00';
+    }
+  }
+  if(e.target.id==='rs-time-tbd'){
+    const input=document.getElementById('rs-time');
+    if(input){
+      input.disabled=e.target.checked;
+      if(e.target.checked) input.value='';
+      else if(!input.value) input.value='09:00';
+    }
+  }
   if(e.target.id==='sched-start-date'){
     const end = document.getElementById('sched-end-date');
     if(end && e.target.value){
@@ -1836,7 +1871,8 @@ function saveSchedule(){
   if(!titleInp) return;
   const title = titleInp.value.trim();
   if(!title){ showToast('내용을 입력해줘'); return; }
-  const time = timeInp.value || '09:00';
+  const timeTbd = !!document.getElementById('sched-time-tbd')?.checked;
+  const time = timeTbd ? 'TBD' : (timeInp.value || '09:00');
   const repeatToggle = document.getElementById('sched-repeat-toggle');
   const rangeToggle = document.getElementById('sched-range-toggle');
 
@@ -1859,7 +1895,7 @@ function saveSchedule(){
       state.tasks.push({
         id:uid(), title, done:false, scope:'day', date:fmtDate(date), time,
         categoryId:null, memo:'', location:'', createdAt:Date.now()+i,
-        sortOrder:nextTaskSortOrder(), rangeGroupId
+        sortOrder:nextTaskSortOrder(), rangeGroupId, isSchedule:true
       });
     }
     showToast(`${dayCount}일 일정으로 등록했어`);
@@ -1869,7 +1905,7 @@ function saveSchedule(){
     showToast('반복 일정으로 등록했어');
   } else {
     const viewDate = currentDayViewDate();
-    state.tasks.push({ id:uid(), title, done:false, scope:'day', date:fmtDate(viewDate), time, categoryId:null, memo:'', location:'', createdAt:Date.now(), sortOrder:nextTaskSortOrder() });
+    state.tasks.push({ id:uid(), title, done:false, scope:'day', date:fmtDate(viewDate), time, categoryId:null, memo:'', location:'', createdAt:Date.now(), sortOrder:nextTaskSortOrder(), isSchedule:true });
   }
   scheduleAddOpen=false; scheduleRepeatDaysSelected=new Set();
   scheduleSave(); render();
@@ -1981,7 +2017,7 @@ function applyTaskDate(task, dateStr){
 function openTaskDetailSheet(id){
   const task = state.tasks.find(x=>x.id===id);
   if(!task) return;
-  const isSchedule = !!task.time;
+  const isSchedule = !!task.time || !!task.isSchedule;
   const canMoveToWeek = task.scope==='day' && !isSchedule;
   const targetWeekKey = task.sourceWeekKey || (task.date ? weekKeyOf(parseDate(task.date)) : fmtDate(weekCursor));
   openSheet(`
@@ -1989,7 +2025,14 @@ function openTaskDetailSheet(id){
     <div class="sheet-title">할 일 수정</div>
     <div class="field-row"><div class="field-label">이름</div><input type="text" id="d-title" value="${escapeHtml(task.title)}" placeholder="할 일 이름"></div>
     ${task.scope==='day' ? `<div class="field-row"><div class="field-label">날짜</div><input type="date" id="d-date" value="${escapeHtml(task.date||'')}"></div>` : ''}
-    ${isSchedule ? `<div class="field-row"><div class="field-label">시간</div><input type="time" id="d-time" value="${task.time}"></div>` : `
+    ${isSchedule ? `<div class="field-row"><div class="field-label">시간</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input type="time" id="d-time" value="${isTbdTime(task.time)?'':(task.time||'')}" style="flex:1;" ${isTbdTime(task.time)?'disabled':''}>
+        <label style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--ink-soft);white-space:nowrap;">
+          <input type="checkbox" id="d-time-tbd" ${isTbdTime(task.time)?'checked':''}>미정
+        </label>
+      </div>
+    </div>` : `
       <div class="field-row">
         <div class="field-label">카테고리</div>
         <div class="chip-row-wrap" id="detail-cat-row">
@@ -2036,7 +2079,11 @@ function openTaskDetailSheet(id){
     task.title = title;
     task.location = document.getElementById('d-location').value.trim();
     task.memo = document.getElementById('d-memo').value.trim();
-    const ti = document.getElementById('d-time'); if(ti) task.time = ti.value;
+    const ti = document.getElementById('d-time');
+    if(ti){
+      task.time = document.getElementById('d-time-tbd')?.checked ? 'TBD' : (ti.value || '09:00');
+      task.isSchedule = true;
+    }
     const di = document.getElementById('d-date'); if(di && di.value) task.date = di.value;
     if(!isSchedule) task.categoryId = selectedCat || null;
     scheduleSave(); closeSheet(); render(); showToast('저장했어');
@@ -2121,7 +2168,14 @@ function openRecurringEditSheet(id, dateStr){
     <div class="sheet-handle"></div>
     <div class="sheet-title">🔁 반복 일정</div>
     ${dateStr ? `<div class="faint" style="margin:-5px 0 12px;">${dateStr} 일정</div>` : ''}
-    <div class="field-row"><div class="field-label">시간</div><input type="time" id="rs-time" value="${shownTime}"></div>
+    <div class="field-row"><div class="field-label">시간</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input type="time" id="rs-time" value="${isTbdTime(shownTime)?'':(shownTime||'')}" style="flex:1;" ${isTbdTime(shownTime)?'disabled':''}>
+        <label style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--ink-soft);white-space:nowrap;">
+          <input type="checkbox" id="rs-time-tbd" ${isTbdTime(shownTime)?'checked':''}>미정
+        </label>
+      </div>
+    </div>
     <div class="field-row"><div class="field-label">이름</div><input type="text" id="rs-title" value="${escapeHtml(shownTitle)}"></div>
     <div class="field-row">
       <div class="field-label">반복 요일</div>
@@ -2148,7 +2202,7 @@ function openRecurringEditSheet(id, dateStr){
       });
     };
     document.getElementById('rs-save-once').onclick = ()=>{
-      const time = document.getElementById('rs-time').value || r.time;
+      const time = document.getElementById('rs-time-tbd')?.checked ? 'TBD' : (document.getElementById('rs-time').value || r.time || '09:00');
       const title = document.getElementById('rs-title').value.trim() || r.title;
       const next = {};
       if(time!==r.time) next.time=time;
@@ -2159,7 +2213,8 @@ function openRecurringEditSheet(id, dateStr){
     };
   }
   document.getElementById('rs-save-all').onclick = ()=>{
-    const newTime = document.getElementById('rs-time').value; if(newTime) r.time = newTime;
+    const newTime = document.getElementById('rs-time-tbd')?.checked ? 'TBD' : document.getElementById('rs-time').value;
+    if(newTime) r.time = newTime;
     const newTitle = document.getElementById('rs-title').value.trim(); if(newTitle) r.title = newTitle;
     r.location = document.getElementById('rs-location').value.trim();
     r.memo = document.getElementById('rs-memo').value.trim();
